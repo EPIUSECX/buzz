@@ -1,5 +1,5 @@
-app_name = "events"
-app_title = "Events"
+app_name = "buzz"
+app_title = "Buzz"
 app_publisher = "BWH Studios"
 app_description = "Event Management App built on Frappe"
 app_email = "hussain@buildwithhussain.com"
@@ -12,7 +12,13 @@ required_apps = ["frappe/payments"]
 
 export_python_type_annotations = True
 
-after_install = "events.install.after_install"
+after_install = "buzz.install.after_install"
+
+
+website_route_rules = [
+	{"from_route": "/dashboard/<path:app_path>", "to_route": "dashboard"},
+]
+
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -21,7 +27,7 @@ after_install = "events.install.after_install"
 # 		"logo": "/assets/events/logo.png",
 # 		"title": "Events",
 # 		"route": "/events",
-# 		"has_permission": "events.api.permission.has_app_permission"
+# 		"has_permission": "buzz.api.permission.has_app_permission"
 # 	}
 # ]
 
@@ -222,7 +228,3 @@ before_tests = "events.install.before_tests"
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
-website_route_rules = [
-	{"from_route": "/dashboard/<path:app_path>", "to_route": "dashboard"},
-]
