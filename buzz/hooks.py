@@ -19,6 +19,16 @@ website_route_rules = [
 	{"from_route": "/dashboard/<path:app_path>", "to_route": "dashboard"},
 ]
 
+# Scheduled Tasks
+# ---------------
+
+scheduler_events = {"daily": ["buzz.tasks.unpublish_ticket_types_after_last_date"]}
+
+# Testing
+# -------
+
+before_tests = "buzz.install.before_tests"
+
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -149,15 +159,6 @@ website_route_rules = [
 # 	}
 # }
 
-# Scheduled Tasks
-# ---------------
-
-scheduler_events = {"daily": ["events.tasks.unpublish_ticket_types_after_last_date"]}
-
-# Testing
-# -------
-
-before_tests = "events.install.before_tests"
 
 # Overriding Methods
 # ------------------------------
