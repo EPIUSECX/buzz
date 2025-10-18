@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 from frappe.utils import days_diff, format_date, format_time, today
 
 from buzz.payments import get_payment_link_for_booking
@@ -126,10 +127,7 @@ def get_event_booking_data(event_route: str) -> dict:
 
 	# Ticket Add-ons
 	add_ons = frappe.db.get_all(
-		"Ticket Add-on",
-		filters={"event": event_doc.name},
-		fields=["*"],
-		order_by="title"
+		"Ticket Add-on", filters={"event": event_doc.name}, fields=["*"], order_by="title"
 	)
 
 	for add_on in add_ons:
@@ -690,11 +688,7 @@ def get_user_info() -> dict:
 def validate_ticket_for_checkin(ticket_id: str) -> dict:
 	try:
 		if not frappe.db.exists("Event Ticket", ticket_id):
-			return {
-				"success": False,
-				"error": "Ticket not found",
-				"message": "ticket ID does not exist.",
-			}
+			frappe.throw(_("Ticket not found"))
 
 		ticket_doc = frappe.get_cached_doc("Event Ticket", ticket_id)
 		event_doc = frappe.get_cached_doc("FE Event", ticket_doc.event)
@@ -708,11 +702,7 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 		)
 
 		if booking_doc and booking_doc.docstatus != 1:
-			return {
-				"success": False,
-				"error": "Invalid ticket",
-				"message": "This ticket is not confirmed and cannot be used for check-in.",
-			}
+			frappe.throw(_("This ticket is not confirmed and cannot be used for check-in."))
 
 		# Check if ticket is already checked in
 		existing_checkin = frappe.db.exists("Event Check In", {"ticket": ticket_id})
@@ -723,24 +713,7 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 				format_date(checkin_doc.creation) + " at " + format_time(checkin_doc.creation)
 			)
 
-			return {
-				"success": False,
-				"error": "Already checked in",
-				"message": f"This ticket was already checked in on {formatted_checkin_time}.",
-				"ticket": {
-					"id": ticket_doc.name,
-					"attendee_name": ticket_doc.attendee_name,
-					"attendee_email": ticket_doc.attendee_email,
-					"event_title": event_doc.title,
-					"ticket_type": (
-						ticket_type_doc.title
-						if ticket_type_doc
-						else ticket_doc.ticket_type
-					),
-					"check_in_time": checkin_doc.creation,
-					"is_checked_in": True,
-				},
-			}
+			frappe.throw(_(f"This ticket was already checked in on {formatted_checkin_time}."))
 
 		# Get add-ons
 		add_ons = frappe.db.get_all(
@@ -781,11 +754,7 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 
 	except Exception as e:
 		frappe.log_error(f"Error validating ticket for check-in: {e!s}")
-		return {
-			"success": False,
-			"error": "System error",
-			"message": "An error occurred while validating the ticket. Please try again.",
-		}
+		frappe.throw(_("An error occurred while validating the ticket. Please try again."))
 
 
 @frappe.whitelist()
@@ -815,8 +784,4 @@ def checkin_ticket(ticket_id: str) -> dict:
 
 	except Exception as e:
 		frappe.log_error(f"Error checking in ticket: {e!s}")
-		return {
-			"success": False,
-			"error": "Check-in failed",
-			"message": "An error occurred while checking in the ticket. Please try again.",
-		}
+		frappe.throw(_("An error occurred while checking in the ticket. Please try again."))
