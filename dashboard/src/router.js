@@ -9,8 +9,8 @@ const routes = [
 		redirect: { name: "bookings-tab" },
 	},
 	{
-		path: "/checkin-scanner",
-		name: "checkin-scanner",
+		path: "/check-in",
+		name: "check-in",
 		component: () => import("@/pages/CheckInScanner.vue"),
 	},
 	{

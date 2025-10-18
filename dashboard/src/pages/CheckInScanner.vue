@@ -1,49 +1,74 @@
 <template>
-	<div class="min-h-[75vh] border border-gray-200 dark:border-gray-700 shadow-sm mx-4 rounded-md">
+	<div
+		class="min-h-[75vh] border border-gray-200 dark:border-gray-700 shadow-sm mx-4 rounded-md"
+	>
 		<!-- Header -->
 		<div class="shadow-sm border-b">
 			<div class="max-w-md mx-auto px-4 py-4">
-				<h1 class="text-xl font-bold text-center text-gray-900 dark:text-white">Event Check-in Scanner</h1>
+				<h1 class="text-xl font-bold text-center text-gray-900 dark:text-white">
+					Event Check-in Scanner
+				</h1>
 			</div>
 		</div>
 
 		<!-- Main Content -->
 		<div class="size-full px-4 py-6">
 			<!-- Event Selection -->
-			<EventSelector v-if="!selectedEvent" :selected-event="selectedEvent" @select="selectEvent" />
+			<EventSelector
+				v-if="!selectedEvent"
+				:selected-event="selectedEvent"
+				@select="selectEvent"
+			/>
 
 			<!-- Scanner Interface -->
 			<div v-else class="space-y-6">
 				<!-- Selected Event Info -->
-				<div
-					class="rounded-lg p-4 shadow-sm border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 flex justify-between items-center">
-					<div class="flex justify-between items-start">
-						<div>
-							<h3 class="font-medium text-gray-900 dark:text-white">{{ selectedEvent.title }}</h3>
-						</div>
-						<Button @click="clearEventSelection" variant="ghost" size="sm" class="text-blue-600 dark:text-blue-400">
-							Change
-						</Button>
-					</div>
-				</div>
+				<Button @click="clearEventSelection" class="w-full" icon-left="arrow-left">
+					{{ selectedEvent.title }}
+				</Button>
 
 				<!-- QR Scanner -->
-				<QRScanner :is-processing="isProcessingTicket" @scan="handleScan" @manual-entry="handleManualEntry" />
+				<QRScanner
+					:is-processing="isProcessingTicket"
+					@scan="handleScan"
+					@manual-entry="handleManualEntry"
+				/>
 
 				<!-- Last Scan Status -->
-				<div v-if="lastScanResult"
-					class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-					<h3 class="font-medium text-gray-900 dark:text-white mb-2">Last Scan Result</h3>
-					<div class="p-3 rounded-lg" :class="lastScanResult.success
-							? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-							: 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-						">
-						<p class="text-sm font-medium"
-							:class="lastScanResult.success ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'">
+				<div
+					v-if="lastScanResult"
+					class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
+				>
+					<h3 class="font-medium text-gray-900 dark:text-white mb-2">
+						Last Scan Result
+					</h3>
+					<div
+						class="p-3 rounded-lg"
+						:class="
+							lastScanResult.success
+								? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+								: 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+						"
+					>
+						<p
+							class="text-sm font-medium"
+							:class="
+								lastScanResult.success
+									? 'text-green-800 dark:text-green-200'
+									: 'text-red-800 dark:text-red-200'
+							"
+						>
 							{{ lastScanResult.message }}
 						</p>
-						<p v-if="lastScanResult.ticket" class="text-xs mt-1"
-							:class="lastScanResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+						<p
+							v-if="lastScanResult.ticket"
+							class="text-xs mt-1"
+							:class="
+								lastScanResult.success
+									? 'text-green-600 dark:text-green-400'
+									: 'text-red-600 dark:text-red-400'
+							"
+						>
 							Ticket ID: {{ lastScanResult.ticket.id }}
 						</p>
 					</div>
@@ -52,8 +77,12 @@
 		</div>
 
 		<!-- Ticket Details Modal -->
-		<TicketDetailsModal v-model="showTicketModal" :validation-result="validationResult" :is-checking-in="isCheckingIn"
-			@check-in="handleCheckIn" />
+		<TicketDetailsModal
+			v-model="showTicketModal"
+			:validation-result="validationResult"
+			:is-checking-in="isCheckingIn"
+			@check-in="handleCheckIn"
+		/>
 	</div>
 </template>
 
