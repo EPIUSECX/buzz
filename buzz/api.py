@@ -687,6 +687,7 @@ def get_user_info() -> dict:
 @frappe.whitelist()
 def validate_ticket_for_checkin(ticket_id: str) -> dict:
 	try:
+		frappe.only_for("Frontdesk Manager", True)
 		if not frappe.db.exists("Event Ticket", ticket_id):
 			frappe.throw(_("Ticket not found"))
 
@@ -761,6 +762,7 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 def checkin_ticket(ticket_id: str) -> dict:
 	"""Check in a ticket."""
 	try:
+		frappe.only_for("Frontdesk Manager", True)
 		validation_result = validate_ticket_for_checkin(ticket_id)
 
 		if not validation_result["success"]:
