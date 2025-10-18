@@ -28,10 +28,13 @@
 					</template>
 					Start Scanner
 				</Button>
-				<Button @click="stopScanner" v-else variant="outline" class="flex-1">
-					<template #prefix>
-						<LucideSquare class="w-4 h-4" />
-					</template>
+				<Button
+					@click="stopScanner"
+					v-else
+					variant="outline"
+					class="flex-1"
+					icon-left="square"
+				>
 					Stop Scanner
 				</Button>
 			</div>

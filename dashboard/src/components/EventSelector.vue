@@ -42,11 +42,9 @@
 					@click="loadEvents"
 					variant="solid"
 					:loading="eventsResource.loading"
+					icon-left="refresh-cw"
 					class="w-full"
 				>
-					<template #prefix>
-						<LucideRefreshCw class="size-4" />
-					</template>
 					Refresh Events
 				</Button>
 
@@ -81,12 +79,11 @@
 				class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 px-6 py-4"
 			>
 				<div
-					class="grid grid-cols-4 gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300"
+					class="grid grid-cols-3 gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300"
 				>
 					<div class="col-span-1">Event</div>
 					<div class="col-span-1">Starts At</div>
 					<div class="col-span-1">Ends At</div>
-					<div class="col-span-1 text-center">Status</div>
 				</div>
 			</div>
 
@@ -98,7 +95,7 @@
 					@click="handleEventSelect(event)"
 					class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer"
 				>
-					<div class="grid grid-cols-4 gap-4 items-center">
+					<div class="grid grid-cols-3 gap-4 items-center">
 						<!-- Event Column -->
 						<div class="col-span-1">
 							<div class="text-sm">
@@ -125,16 +122,6 @@
 								</div>
 							</div>
 						</div>
-
-						<!-- Status Column -->
-						<div class="col-span-1 text-center">
-							<Badge
-								:variant="'subtle'"
-								:theme="getEventStatus(event).variant"
-								:label="getEventStatus(event).label"
-								class="text-xs font-semibold px-4 py-2 rounded-lg shadow-sm"
-							/>
-						</div>
 					</div>
 				</div>
 			</div>
@@ -143,11 +130,10 @@
 </template>
 
 <script setup>
-import { Badge, Button, createResource, dayjsLocal, Spinner } from "frappe-ui";
+import { Button, createListResource, dayjsLocal, Spinner } from "frappe-ui";
 import { onMounted, ref } from "vue";
 import LucideCalendarX from "~icons/lucide/calendar-x";
 import LucideInfo from "~icons/lucide/info";
-import LucideRefreshCw from "~icons/lucide/refresh-cw";
 
 defineProps({
 	selectedEvent: {
@@ -160,22 +146,15 @@ const emit = defineEmits(["select"]);
 
 const availableEvents = ref([]);
 
-const eventsResource = createResource({
-	url: "frappe.client.get_list",
-	params: {
-		doctype: "FE Event",
-		fields: [
-			"name",
-			"title",
-			"start_date",
-			"start_time",
-			"end_date",
-			"end_time",
-			"is_published",
-		],
-		order_by: "start_date desc",
+const eventsResource = createListResource({
+	doctype: "FE Event",
+	fields: ["name", "title", "start_date", "start_time", "end_date", "end_time"],
+	order_by: "start_date desc",
+	filters: {
+		is_published: 1,
+		end_date: [">=", dayjsLocal().format("YYYY-MM-DD")],
 	},
-	auto: false,
+	auto: true,
 	onSuccess: (data) => {
 		availableEvents.value = data;
 	},
@@ -204,31 +183,6 @@ const formatTimestamp = (date, time) => {
 	if (formattedDate && !formattedTime) return formattedDate;
 	if (!formattedDate && formattedTime) return formattedTime;
 	return `${formattedDate} ${formattedTime}`;
-};
-
-const getEventStatus = (event) => {
-	const now = dayjsLocal();
-	const startDate = dayjsLocal(event.start_date);
-	const endDate = dayjsLocal(event.end_date);
-
-	if (!event.is_published) {
-		return { variant: "gray", label: "Draft" };
-	}
-
-	// Ongoing: started before (or today) and ends after (or today)
-	if (
-		(startDate.isSame(now, "day") || startDate.isBefore(now)) &&
-		(endDate.isSame(now, "day") || endDate.isAfter(now))
-	) {
-		return { variant: "green", label: "Ongoing" };
-	}
-
-	// Upcoming: starts in the future
-	if (startDate.isAfter(now)) {
-		return { variant: "blue", label: "Upcoming" };
-	}
-
-	return { variant: "gray", label: "Past" };
 };
 
 const handleEventSelect = (event) => {
