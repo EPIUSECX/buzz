@@ -24,6 +24,7 @@ declare module 'vue' {
     EventSponsorForm: typeof import('./src/components/EventSponsorForm.vue')['default']
     LucideCalendarX: typeof import('~icons/lucide/calendar-x')['default']
     LucideInfo: typeof import('~icons/lucide/info')['default']
+    LucideX: typeof import('~icons/lucide/x')['default']
     Navbar: typeof import('./src/components/Navbar.vue')['default']
     ProfileView: typeof import('./src/components/ProfileView.vue')['default']
     QRScanner: typeof import('./src/components/QRScanner.vue')['default']

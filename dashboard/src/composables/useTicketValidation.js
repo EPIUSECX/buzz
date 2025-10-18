@@ -19,7 +19,7 @@ export function useTicketValidation() {
 			};
 			isProcessingTicket.value = false;
 		},
-		onError: (error) => {
+		onError: () => {
 			lastScanResult.value = {
 				success: false,
 				message: "Error validating ticket",
