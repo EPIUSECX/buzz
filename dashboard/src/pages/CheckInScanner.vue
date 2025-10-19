@@ -28,11 +28,7 @@
 				</Button>
 
 				<!-- QR Scanner -->
-				<QRScanner
-					:is-processing="isProcessingTicket"
-					@scan="handleScan"
-					@manual-entry="handleManualEntry"
-				/>
+				<QRScanner ref="qrScannerRef" />
 
 				<!-- Last Scan Status -->
 				<div
@@ -77,38 +73,23 @@
 		</div>
 
 		<!-- Ticket Details Modal -->
-		<TicketDetailsModal
-			v-model="showTicketModal"
-			:validation-result="validationResult"
-			:is-checking-in="isCheckingIn"
-			@check-in="handleCheckIn"
-		/>
+		<TicketDetailsModal :selected-event="selectedEvent" />
 	</div>
 </template>
 
 <script setup>
 import { Button } from "frappe-ui";
-import { ref, watch } from "vue";
-import beepFailSound from "../assets/audio/beep-fail.wav";
-import beepSound from "../assets/audio/beep.wav";
+import { ref } from "vue";
 import EventSelector from "../components/EventSelector.vue";
 import QRScanner from "../components/QRScanner.vue";
 import TicketDetailsModal from "../components/TicketDetailsModal.vue";
 import { useTicketValidation } from "../composables/useTicketValidation.js";
 
-const {
-	isProcessingTicket,
-	isCheckingIn,
-	validationResult,
-	lastScanResult,
-	validateTicket,
-	checkInTicket,
-	clearResults,
-} = useTicketValidation();
+const { lastScanResult, clearResults } = useTicketValidation();
 
 // State
 const selectedEvent = ref(null);
-const showTicketModal = ref(false);
+const qrScannerRef = ref(null);
 
 // Event selection
 const selectEvent = (event) => {
@@ -119,58 +100,5 @@ const selectEvent = (event) => {
 const clearEventSelection = () => {
 	selectedEvent.value = null;
 	clearResults();
-	showTicketModal.value = false;
 };
-
-const playSuccessSound = () => {
-	const audio = new Audio(beepSound);
-	audio.play();
-};
-
-const playErrorSound = () => {
-	const audio = new Audio(beepFailSound);
-	audio.play();
-};
-
-// Handle scan results
-const handleScan = (ticketId, error) => {
-	if (ticketId) {
-		validateTicket(ticketId);
-	} else {
-		playErrorSound();
-		lastScanResult.value = {
-			success: false,
-			message: error || "Invalid QR code format",
-			ticket: null,
-		};
-	}
-};
-
-// Handle manual entry
-const handleManualEntry = (ticketId) => {
-	validateTicket(ticketId);
-};
-
-// Handle check-in
-const handleCheckIn = () => {
-	checkInTicket();
-	showTicketModal.value = false;
-};
-
-// Watch for validation results to show modal and play sounds
-watch(validationResult, (newResult) => {
-	if (newResult) {
-		if (newResult.success) {
-			if (!newResult.ticket?.is_checked_in) {
-				playSuccessSound();
-			}
-			showTicketModal.value = true;
-		} else {
-			playErrorSound();
-			if (newResult.error === "Already checked in") {
-				showTicketModal.value = true;
-			}
-		}
-	}
-});
 </script>

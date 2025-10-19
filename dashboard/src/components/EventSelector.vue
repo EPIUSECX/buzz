@@ -76,7 +76,7 @@
 		>
 			<!-- Header -->
 			<div
-				class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 px-6 py-4"
+				class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-600 p-4"
 			>
 				<div
 					class="grid grid-cols-3 gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300"
