@@ -1,5 +1,5 @@
 <template>
-	<Dialog v-model="showModal">
+	<Dialog v-model="showTicketModal">
 		<template #body-title>
 			<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
 				{{ validationResult?.success ? "Valid Ticket" : "Invalid Ticket" }}
@@ -32,7 +32,7 @@
 									>Attendee</label
 								>
 								<p class="text-gray-900 dark:text-white">
-									{{ validationResult.ticket.attendee_name }}
+									{{ validationResult?.ticket?.attendee_name }}
 								</p>
 							</div>
 							<div>
@@ -41,7 +41,7 @@
 									>Email</label
 								>
 								<p class="text-gray-900 dark:text-white text-sm">
-									{{ validationResult.ticket.attendee_email }}
+									{{ validationResult?.ticket?.attendee_email }}
 								</p>
 							</div>
 							<div>
@@ -50,7 +50,7 @@
 									>Ticket Type</label
 								>
 								<p class="text-gray-900 dark:text-white">
-									{{ validationResult.ticket.ticket_type }}
+									{{ validationResult?.ticket?.ticket_type }}
 								</p>
 							</div>
 							<div>
@@ -59,14 +59,14 @@
 									>Ticket ID</label
 								>
 								<p class="text-gray-900 dark:text-white font-mono text-sm">
-									{{ validationResult.ticket.id }}
+									{{ validationResult?.ticket?.id }}
 								</p>
 							</div>
 						</div>
 
 						<!-- Add-ons -->
 						<div
-							v-if="validationResult.ticket.add_ons?.length"
+							v-if="validationResult?.ticket?.add_ons?.length"
 							class="border-t border-gray-200 dark:border-gray-600 pt-4"
 						>
 							<label
@@ -75,7 +75,7 @@
 							>
 							<div class="space-y-2">
 								<div
-									v-for="addon in validationResult.ticket.add_ons"
+									v-for="addon in validationResult?.ticket?.add_ons"
 									:key="addon.add_on"
 									class="flex justify-between text-sm"
 								>
@@ -93,7 +93,9 @@
 
 				<!-- Already Checked In State -->
 				<div
-					v-else-if="validationResult.success && validationResult.ticket?.is_checked_in"
+					v-else-if="
+						validationResult?.success && validationResult?.ticket?.is_checked_in
+					"
 				>
 					<div class="text-center mb-6">
 						<div
@@ -107,7 +109,7 @@
 							Already Checked In
 						</h4>
 						<p class="text-gray-600 dark:text-gray-400">
-							{{ validationResult.message }}
+							{{ validationResult?.message }}
 						</p>
 					</div>
 
@@ -119,7 +121,7 @@
 									>Attendee</label
 								>
 								<p class="text-gray-900 dark:text-white">
-									{{ validationResult.ticket.attendee_name }}
+									{{ validationResult?.ticket?.attendee_name }}
 								</p>
 							</div>
 							<div>
@@ -128,7 +130,7 @@
 									>Check-in Time</label
 								>
 								<p class="text-gray-900 dark:text-white text-sm">
-									{{ formatDateTime(validationResult.ticket.check_in_time) }}
+									{{ formatDateTime(validationResult?.ticket?.check_in_time) }}
 								</p>
 							</div>
 						</div>
@@ -144,39 +146,35 @@
 							<LucideXCircle class="w-8 h-8 text-red-600 dark:text-red-400" />
 						</div>
 						<h4 class="text-lg font-semibold text-gray-900 dark:text-white">
-							{{ validationResult.error || "Invalid Ticket" }}
+							{{ validationResult?.error || "Invalid Ticket" }}
 						</h4>
 						<p class="text-gray-600 dark:text-gray-400">
-							{{ validationResult.message }}
+							{{ validationResult?.message }}
 						</p>
 					</div>
 				</div>
 			</div>
 		</template>
 
-		<template #actions="{ close }">
+		<template #actions>
 			<!-- Success State Actions -->
 			<div
-				v-if="validationResult?.success && !validationResult.ticket?.is_checked_in"
-				class="flex gap-3"
+				v-if="validationResult?.success && !validationResult?.ticket?.is_checked_in"
+				class="flex gap-3 flex-col"
 			>
-				<Button @click="handleCheckIn" :loading="isCheckingIn" class="flex-1">
+				<Button @click="handleCheckIn" :loading="isCheckingIn" class="w-full">
 					<template #prefix>
 						<LucideUserCheck class="w-4 h-4" />
 					</template>
 					Check In
 				</Button>
-				<Button @click="close" variant="outline"> Cancel </Button>
+				<Button @click="handleModalClose" variant="outline" class="w-full">
+					Cancel
+				</Button>
 			</div>
 
-			<!-- Already Checked In Actions -->
-			<div v-else-if="validationResult?.success && validationResult.ticket?.is_checked_in">
-				<Button @click="close" class="w-full"> Close </Button>
-			</div>
-
-			<!-- Error State Actions -->
 			<div v-else>
-				<Button @click="close" class="w-full" variant="outline"> Close </Button>
+				<Button @click="handleModalClose" class="w-full" variant="outline"> Close </Button>
 			</div>
 		</template>
 	</Dialog>
@@ -184,44 +182,35 @@
 
 <script setup>
 import { Button, Dialog, dayjsLocal } from "frappe-ui";
-import { computed } from "vue";
 import LucideAlertTriangle from "~icons/lucide/alert-triangle";
 import LucideCheckCircle from "~icons/lucide/check-circle";
 import LucideUserCheck from "~icons/lucide/user-check";
 import LucideXCircle from "~icons/lucide/x-circle";
+import { useTicketValidation } from "../composables/useTicketValidation.js";
 
-// Props
 const props = defineProps({
-	modelValue: {
-		type: Boolean,
-		default: false,
-	},
-	validationResult: {
+	selectedEvent: {
 		type: Object,
 		default: null,
 	},
-	isCheckingIn: {
-		type: Boolean,
-		default: false,
-	},
 });
 
-// Emits
-const emit = defineEmits(["update:modelValue", "check-in"]);
+const { showTicketModal, isCheckingIn, validationResult, checkInTicket, closeModal } =
+	useTicketValidation();
 
-// Computed
-const showModal = computed({
-	get: () => props.modelValue,
-	set: (value) => emit("update:modelValue", value),
-});
+// Handle check-in
+const handleCheckIn = () => {
+	checkInTicket();
+};
+
+// Handle modal close
+const handleModalClose = () => {
+	closeModal();
+};
 
 // Methods
 const formatDateTime = (datetime) => {
 	if (!datetime) return "";
 	return dayjsLocal(datetime).format("MMM DD, YYYY [at] h:mm A");
-};
-
-const handleCheckIn = () => {
-	emit("check-in");
 };
 </script>
