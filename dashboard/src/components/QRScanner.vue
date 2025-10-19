@@ -8,11 +8,11 @@
 
 		<!-- Scanner Container -->
 		<div class="relative">
-			<div id="qr-reader" class="w-full" :class="{ 'opacity-50': isProcessing }"></div>
+			<div id="qr-reader" class="w-full" :class="{ 'opacity-50': isProcessingTicket }"></div>
 
 			<!-- Processing Overlay -->
 			<div
-				v-if="isProcessing"
+				v-if="isProcessingTicket"
 				class="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-75 flex items-center justify-center"
 			>
 				<Spinner class="w-8 h-8" />
@@ -46,11 +46,11 @@
 						v-model="manualTicketId"
 						placeholder="Enter ticket ID manually"
 						class="flex-1"
-						:disabled="isProcessing"
+						:disabled="isProcessingTicket"
 					/>
 					<Button
 						@click="handleManualEntry"
-						:loading="isProcessing"
+						:loading="isProcessingTicket"
 						:disabled="!manualTicketId.trim()"
 					>
 						Check
@@ -66,20 +66,15 @@ import { Button, Spinner, TextInput } from "frappe-ui";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import LucideQrCode from "~icons/lucide/qr-code";
-import LucideSquare from "~icons/lucide/square";
+import { useTicketValidation } from "../composables/useTicketValidation.js";
 
-const props = defineProps({
-	isProcessing: {
-		type: Boolean,
-		default: false,
-	},
-});
-
-const emit = defineEmits(["scan", "manual-entry"]);
+const { validateTicket, isProcessingTicket } = useTicketValidation();
 
 const qrScanner = ref(null);
 const scannerActive = ref(false);
 const manualTicketId = ref("");
+const lastScannedTicketId = ref(null);
+const scanTimeout = ref(null);
 
 const startScanner = () => {
 	if (scannerActive.value) return;
@@ -109,15 +104,29 @@ const stopScanner = () => {
 const onScanSuccess = (decodedText) => {
 	// Extract ticket ID from QR code
 	const ticketId = extractTicketId(decodedText);
-	if (ticketId) {
-		emit("scan", ticketId);
-	} else {
-		emit("scan", null, "Invalid QR code format");
+	if (!ticketId) {
+		frappe.toast.error("Invalid QR code format");
+		return;
 	}
+
+	// Prevent duplicate scans of the same ticket within 2 seconds
+	if (lastScannedTicketId.value === ticketId) {
+		return;
+	}
+
+	if (scanTimeout.value) {
+		clearTimeout(scanTimeout.value);
+	}
+	lastScannedTicketId.value = ticketId;
+	validateTicket(ticketId);
+
+	scanTimeout.value = setTimeout(() => {
+		lastScannedTicketId.value = null;
+	}, 2000);
 };
 
-const onScanFailure = (error) => {
-	// Silently handle scan failures - they happen frequently
+const onScanFailure = () => {
+	frappe.toast.error("Error scanning QR code");
 };
 
 const extractTicketId = (qrData) => {
@@ -145,7 +154,7 @@ const handleManualEntry = () => {
 	const ticketId = manualTicketId.value.trim();
 	if (!ticketId) return;
 
-	emit("manual-entry", ticketId);
+	validateTicket(ticketId);
 	manualTicketId.value = "";
 };
 
@@ -158,6 +167,13 @@ onMounted(() => {
 onUnmounted(() => {
 	if (qrScanner.value) {
 		qrScanner.value.clear();
+		qrScanner.value = null;
+		scannerActive.value = false;
+	}
+
+	if (scanTimeout.value) {
+		clearTimeout(scanTimeout.value);
+		scanTimeout.value = null;
 	}
 });
 
@@ -170,6 +186,10 @@ defineExpose({
 <style scoped>
 #qr-reader {
 	width: 100%;
+}
+
+:global(#qr-reader img[alt="Info icon"]) {
+	display: none !important;
 }
 
 /* Override html5-qrcode styles for better mobile experience */
