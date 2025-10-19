@@ -6,7 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "event",
-  "track",
+  "date",
   "column_break_fxzb",
   "ticket",
   "section_break_tt1x",
@@ -48,17 +48,16 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "track",
-   "fieldtype": "Link",
-   "label": "Track",
-   "options": "Event Track"
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-18 14:52:41.058318",
+ "modified": "2025-10-18 16:51:30.061975",
  "modified_by": "Administrator",
  "module": "Events",
  "name": "Event Check In",
