@@ -78,6 +78,10 @@ def get_payment_link(
 		order = controller.create_order(**payment_details)
 		payment_details.update({"order_id": order.get("id")})
 
+	if payment_gateway== "Paymob":
+		order=controller.create_order(**payment_details)
+		payment_details.update({"order_id": order.get("id")})
+
 	url = controller.get_payment_url(**payment_details)
 
 	return url
