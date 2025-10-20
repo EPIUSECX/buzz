@@ -711,7 +711,7 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 			format_date(checkin_doc.creation) + " at " + format_time(checkin_doc.creation)
 		)
 
-		frappe.throw(_(f"This ticket was already checked in today ({formatted_checkin_time})."))
+		frappe.throw(_("This ticket was already checked in today ({0}).").format(formatted_checkin_time))
 
 	# Get add-ons
 	add_ons = frappe.db.get_all(
@@ -772,7 +772,10 @@ def checkin_ticket(ticket_id: str) -> dict:
 
 	return {
 		"success": True,
-		"message": f"Successfully checked in {validation_result['ticket']['attendee_name']} for {frappe.format(checkin_date, {'fieldtype': 'Date'})}",
+		"message": _("Successfully checked in {attendee_name} for {checkin_date}").format(
+			attendee_name=validation_result["ticket"]["attendee_name"],
+			checkin_date=frappe.format(checkin_date, {"fieldtype": "Date"}),
+		),
 		"ticket": {
 			**validation_result["ticket"],
 			"is_checked_in": True,

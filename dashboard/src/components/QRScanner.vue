@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import { Button, Spinner, TextInput } from "frappe-ui";
+import { Button, Spinner, TextInput, toast } from "frappe-ui";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import LucideQrCode from "~icons/lucide/qr-code";
@@ -105,7 +105,7 @@ const onScanSuccess = (decodedText) => {
 	// Extract ticket ID from QR code
 	const ticketId = extractTicketId(decodedText);
 	if (!ticketId) {
-		frappe.toast.error("Invalid QR code format");
+		toast.error("Invalid QR code format");
 		return;
 	}
 
@@ -126,7 +126,7 @@ const onScanSuccess = (decodedText) => {
 };
 
 const onScanFailure = () => {
-	frappe.toast.error("Error scanning QR code");
+	toast.error("Error scanning QR code");
 };
 
 const extractTicketId = (qrData) => {
