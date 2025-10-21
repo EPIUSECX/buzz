@@ -132,6 +132,10 @@ def mark_payment_as_received(reference_doctype: str, reference_docname: str):
 		payment_gateway = data.get("payment_gateway")
 		if payment_gateway == "Razorpay":
 			payment_id = "razorpay_payment_id"
+		
+		if payment_gateway =="Paymob":
+			payment_id="paymob_payment_id"
+
 		elif "Stripe" in payment_gateway:
 			payment_id = "stripe_token_id"
 		else:
