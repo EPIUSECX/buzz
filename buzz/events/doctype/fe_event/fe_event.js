@@ -60,5 +60,13 @@ frappe.ui.form.on("FE Event", {
 				},
 			};
 		});
+
+		frm.add_custom_button("Pay", () => {
+			// Replace this token with your dynamically generated one
+			const payment_url =
+				"https://accept.paymob.com/api/acceptance/iframes/967335?payment_token=ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5WDJsa0lqb3lNRFkyTlRRMExDSmhiVzkxYm5SZlkyVnVkSE1pT2pFd01Dd2lZM1Z5Y21WdVkza2lPaUpGUjFBaUxDSnBiblJsWjNKaGRHbHZibDlwWkNJNk5UTTFNVFV5TUN3aWIzSmtaWEpmYVdRaU9qUXdOVEk1T0RRMk15d2lZbWxzYkdsdVoxOWtZWFJoSWpwN0ltWnBjbk4wWDI1aGJXVWlPaUpCWkcxcGJtbHpkSEpoZEc5eUlpd2liR0Z6ZEY5dVlXMWxJam9pUVdSdGFXNXBjM1J5WVhSdmNpSXNJbk4wY21WbGRDSTZJazVCSWl3aVluVnBiR1JwYm1jaU9pSk9RU0lzSW1ac2IyOXlJam9pVGtFaUxDSmhjR0Z5ZEcxbGJuUWlPaUpPUVNJc0ltTnBkSGtpT2lKRFlXbHlieUlzSW5OMFlYUmxJam9pVGtFaUxDSmpiM1Z1ZEhKNUlqb2lSVWNpTENKbGJXRnBiQ0k2SWtGa2JXbHVhWE4wY21GMGIzSWlMQ0p3YUc5dVpWOXVkVzFpWlhJaU9pSXJNakF4TVRFeE1URXhNVEV4SWl3aWNHOXpkR0ZzWDJOdlpHVWlPaUpPUVNJc0ltVjRkSEpoWDJSbGMyTnlhWEIwYVc5dUlqb2lUa0VpZlN3aWJHOWphMTl2Y21SbGNsOTNhR1Z1WDNCaGFXUWlPbVpoYkhObExDSmxlSFJ5WVNJNmUzMHNJbk5wYm1kc1pWOXdZWGx0Wlc1MFgyRjBkR1Z0Y0hRaU9tWmhiSE5sTENKbGVIQWlPakUzTmpFeU1UazVOREVzSW5CdGExOXBjQ0k2SWpFNU55NDBPUzR5TURndU1UYzVJbjAuWVVQQkdGaWFzNWQwWkFWaWdLNjdfcXlEV0c3N2dWNmJEMkVCUXhFNlhQalRaYTBLaVNMX0htTTkwTkgwV29ndl8tWnJ1QXJ5SFZFNGdMSklGN3BDdUE=";
+			// Open in new tab (or use window.location.href to open in same tab)
+			window.open(payment_url, "_blank");
+		});
 	},
 });
