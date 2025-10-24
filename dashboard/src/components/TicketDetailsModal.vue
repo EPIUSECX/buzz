@@ -198,17 +198,14 @@ const props = defineProps({
 const { showTicketModal, isCheckingIn, validationResult, checkInTicket, closeModal } =
 	useTicketValidation();
 
-// Handle check-in
 const handleCheckIn = () => {
 	checkInTicket();
 };
 
-// Handle modal close
 const handleModalClose = () => {
 	closeModal();
 };
 
-// Methods
 const formatDateTime = (datetime) => {
 	if (!datetime) return "";
 	return dayjsLocal(datetime).format("MMM DD, YYYY [at] h:mm A");
