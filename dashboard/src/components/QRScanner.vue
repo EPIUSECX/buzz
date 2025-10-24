@@ -8,7 +8,11 @@
 
 		<!-- Scanner Container -->
 		<div class="relative">
-			<div id="qr-reader" class="w-full" :class="{ 'opacity-50': isProcessingTicket }"></div>
+			<div
+				id="qr-reader"
+				class="w-full text-ink-gray-7"
+				:class="{ 'opacity-50': isProcessingTicket }"
+			></div>
 
 			<!-- Processing Overlay -->
 			<div
@@ -22,7 +26,12 @@
 		<!-- Scanner Controls -->
 		<div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
 			<div class="flex gap-2">
-				<Button @click="startScanner" v-if="!scannerActive" variant="solid" class="flex-1">
+				<Button
+					@click="startScanner"
+					v-if="!scannerActive"
+					variant="outline"
+					class="flex-1"
+				>
 					<template #prefix>
 						<LucideQrCode class="w-4 h-4" />
 					</template>
@@ -64,7 +73,7 @@
 <script setup>
 import { Button, Spinner, TextInput, toast } from "frappe-ui";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import { onUnmounted, ref } from "vue";
 import LucideQrCode from "~icons/lucide/qr-code";
 import { useTicketValidation } from "../composables/useTicketValidation.js";
 
@@ -125,8 +134,8 @@ const onScanSuccess = (decodedText) => {
 	}, 2000);
 };
 
-const onScanFailure = () => {
-	toast.error("Error scanning QR code");
+const onScanFailure = (error) => {
+	console.warn("QR Scanner Error:", error);
 };
 
 const extractTicketId = (qrData) => {
@@ -158,12 +167,6 @@ const handleManualEntry = () => {
 	manualTicketId.value = "";
 };
 
-onMounted(() => {
-	nextTick(() => {
-		startScanner();
-	});
-});
-
 onUnmounted(() => {
 	if (qrScanner.value) {
 		qrScanner.value.clear();
@@ -189,6 +192,10 @@ defineExpose({
 }
 
 :global(#qr-reader img[alt="Info icon"]) {
+	display: none !important;
+}
+
+:global(#qr-reader img[alt="Camera based scan"]) {
 	display: none !important;
 }
 
