@@ -3,85 +3,103 @@ import { ref } from "vue";
 import beepFailSound from "../assets/audio/beep-fail.wav";
 import beepSound from "../assets/audio/beep.wav";
 
-// Singleton state - shared across all components
 let ticketValidationState = null;
 
-export function useTicketValidation() {
-	// Return existing state if it exists
-	if (ticketValidationState) {
-		return ticketValidationState;
+const isProcessingTicket = ref(false);
+const isCheckingIn = ref(false);
+const validationResult = ref(null);
+const lastScanResult = ref(null);
+const showTicketModal = ref(false);
+
+let lastToastMessage = null;
+let lastToastTime = 0;
+const TOAST_DEBOUNCE_MS = 500;
+
+const playSuccessSound = () => {
+	const audio = new Audio(beepSound);
+	audio.play();
+};
+
+const playErrorSound = () => {
+	const audio = new Audio(beepFailSound);
+	audio.play();
+};
+
+const showDebouncedToast = (message, type = "error") => {
+	const now = Date.now();
+	if (lastToastMessage === message && now - lastToastTime < TOAST_DEBOUNCE_MS) {
+		return;
 	}
+	lastToastMessage = message;
+	lastToastTime = now;
 
-	// Create new state only if it doesn't exist
-	const isProcessingTicket = ref(false);
-	const isCheckingIn = ref(false);
-	const validationResult = ref(null);
-	const lastScanResult = ref(null);
-	const showTicketModal = ref(false);
+	if (type === "error") {
+		toast.error(message);
+	} else {
+		toast.success(message);
+	}
+};
 
-	const playSuccessSound = () => {
-		const audio = new Audio(beepSound);
-		audio.play();
-	};
+// Ticket validation resource
+const validateTicketResource = createResource({
+	url: "buzz.api.validate_ticket_for_checkin",
+	onSuccess: (data) => {
+		console.log("validateTicketResource onSuccess", data);
+		validationResult.value = data;
+		lastScanResult.value = {
+			success: data.success,
+			message: data.message,
+			ticket: data.ticket,
+		};
+		showTicketModal.value = true;
+		playSuccessSound();
+		isProcessingTicket.value = false;
+	},
+	onError: (error) => {
+		validationResult.value = null;
+		lastScanResult.value = null;
+		isProcessingTicket.value = false;
+		const errorData = JSON.stringify(error);
 
-	const playErrorSound = () => {
-		const audio = new Audio(beepFailSound);
-		audio.play();
-	};
+		if (errorData.includes("Ticket not found")) {
+			showDebouncedToast("Ticket not found");
+		} else if (
+			errorData.includes("This ticket is not confirmed and cannot be used for check-in")
+		) {
+			showDebouncedToast("This ticket is not confirmed and cannot be used for check-in");
+		} else if (errorData.includes("This ticket was already checked in today")) {
+			showDebouncedToast("This ticket was already checked in today.");
+		} else {
+			showDebouncedToast("Error validating ticket");
+		}
+		playErrorSound();
+	},
+});
 
-	// Ticket validation resource
-	const validateTicketResource = createResource({
-		url: "buzz.api.validate_ticket_for_checkin",
-		onSuccess: (data) => {
+// Check-in resource
+const checkInResource = createResource({
+	url: "buzz.api.checkin_ticket",
+	onSuccess: (data) => {
+		if (data.success) {
 			validationResult.value = data;
 			lastScanResult.value = {
-				success: data.success,
+				success: true,
 				message: data.message,
 				ticket: data.ticket,
 			};
-			showTicketModal.value = true;
-			playSuccessSound();
-			isProcessingTicket.value = false;
-		},
-		onError: (error) => {
-			validationResult.value = null;
-			lastScanResult.value = null;
-			isProcessingTicket.value = false;
-			let errorData = JSON.stringify(error);
-			if (errorData.includes("Ticket not found")) {
-				toast.error("Ticket not found");
-			} else if (
-				errorData.includes("This ticket is not confirmed and cannot be used for check-in")
-			) {
-				toast.error("This ticket is not confirmed and cannot be used for check-in");
-			} else if (errorData.includes("This ticket was already checked in today")) {
-				toast.error("This ticket was already checked in today.");
-			} else {
-				toast.error("Error validating ticket");
-			}
-			playErrorSound();
-		},
-	});
+			showTicketModal.value = false;
+		}
+		isCheckingIn.value = false;
+	},
+	onError: (error) => {
+		isCheckingIn.value = false;
+	},
+});
 
-	// Check-in resource
-	const checkInResource = createResource({
-		url: "buzz.api.checkin_ticket",
-		onSuccess: (data) => {
-			if (data.success) {
-				validationResult.value = data;
-				lastScanResult.value = {
-					success: true,
-					message: data.message,
-					ticket: data.ticket,
-				};
-				showTicketModal.value = false;
-			}
-			isCheckingIn.value = false;
-		},
-		onError: (error) => {
-			isCheckingIn.value = false;
-		},
-	});
+export function useTicketValidation() {
+	if (ticketValidationState) {
+		return ticketValidationState;
+	}
 
 	// Methods
 	const validateTicket = (ticketId) => {
