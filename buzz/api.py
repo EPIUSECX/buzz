@@ -692,13 +692,9 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 
 	ticket_doc = frappe.get_cached_doc("Event Ticket", ticket_id)
 	event_doc = frappe.get_cached_doc("FE Event", ticket_doc.event)
-	booking_doc = frappe.get_cached_doc("Event Booking", ticket_doc.booking) if ticket_doc.booking else None
 	ticket_type_doc = (
 		frappe.get_cached_doc("Event Ticket Type", ticket_doc.ticket_type) if ticket_doc.ticket_type else None
 	)
-
-	if booking_doc and booking_doc.docstatus != 1:
-		frappe.throw(_("This ticket is not confirmed and cannot be used for check-in."))
 
 	# Check if ticket is already checked in today
 	checkin_date = frappe.utils.today()
@@ -728,8 +724,7 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 	)
 
 	return {
-		"success": True,
-		"message": "Valid ticket ready for check-in",
+		"message": _("Valid ticket ready for check-in"),
 		"ticket": {
 			"id": ticket_doc.name,
 			"attendee_name": ticket_doc.attendee_name,
@@ -745,8 +740,6 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 			"check_in_time": None,
 			"booking_id": ticket_doc.booking,
 			"add_ons": add_ons,
-			"amount": booking_doc.total_amount if booking_doc else 0,
-			"currency": booking_doc.currency if booking_doc else "USD",
 		},
 	}
 
@@ -760,9 +753,6 @@ def checkin_ticket(ticket_id: str) -> dict:
 	checkin_date = frappe.utils.today()
 	validation_result = validate_ticket_for_checkin(ticket_id)
 
-	if not validation_result["success"]:
-		return validation_result
-
 	# Create check-in record
 	checkin_doc = frappe.new_doc("Event Check In")
 	checkin_doc.ticket = ticket_id
@@ -771,7 +761,6 @@ def checkin_ticket(ticket_id: str) -> dict:
 	checkin_doc.submit()
 
 	return {
-		"success": True,
 		"message": _("Successfully checked in {attendee_name} for {checkin_date}").format(
 			attendee_name=validation_result["ticket"]["attendee_name"],
 			checkin_date=frappe.format(checkin_date, {"fieldtype": "Date"}),
