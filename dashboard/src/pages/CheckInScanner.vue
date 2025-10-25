@@ -32,40 +32,23 @@
 
 				<!-- Last Scan Status -->
 				<div
-					v-if="lastScanResult"
+					v-if="validationResult"
 					class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
 				>
 					<h3 class="font-medium text-gray-900 dark:text-white mb-2">
 						Last Scan Result
 					</h3>
 					<div
-						class="p-3 rounded-lg"
-						:class="
-							lastScanResult.success
-								? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-								: 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-						"
+						class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
 					>
-						<p
-							class="text-sm font-medium"
-							:class="
-								lastScanResult.success
-									? 'text-green-800 dark:text-green-200'
-									: 'text-red-800 dark:text-red-200'
-							"
-						>
-							{{ lastScanResult.message }}
+						<p class="text-sm font-medium text-green-800 dark:text-green-200">
+							{{ validationResult.message }}
 						</p>
 						<p
-							v-if="lastScanResult.ticket"
-							class="text-xs mt-1"
-							:class="
-								lastScanResult.success
-									? 'text-green-600 dark:text-green-400'
-									: 'text-red-600 dark:text-red-400'
-							"
+							v-if="validationResult.ticket"
+							class="text-xs mt-1 text-green-600 dark:text-green-400"
 						>
-							Ticket ID: {{ lastScanResult.ticket.id }}
+							Ticket ID: {{ validationResult.ticket.id }}
 						</p>
 					</div>
 				</div>
@@ -85,7 +68,7 @@ import QRScanner from "../components/QRScanner.vue";
 import TicketDetailsModal from "../components/TicketDetailsModal.vue";
 import { useTicketValidation } from "../composables/useTicketValidation.js";
 
-const { lastScanResult, clearResults } = useTicketValidation();
+const { validationResult, clearResults } = useTicketValidation();
 
 // State
 const selectedEvent = ref(null);

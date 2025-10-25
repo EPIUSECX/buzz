@@ -8,7 +8,6 @@ let ticketValidationState = null;
 const isProcessingTicket = ref(false);
 const isCheckingIn = ref(false);
 const validationResult = ref(null);
-const lastScanResult = ref(null);
 const showTicketModal = ref(false);
 
 let lastToastMessage = null;
@@ -46,18 +45,12 @@ const validateTicketResource = createResource({
 	onSuccess: (data) => {
 		console.log("validateTicketResource onSuccess", data);
 		validationResult.value = data;
-		lastScanResult.value = {
-			success: data.success,
-			message: data.message,
-			ticket: data.ticket,
-		};
 		showTicketModal.value = true;
 		playSuccessSound();
 		isProcessingTicket.value = false;
 	},
 	onError: (error) => {
 		validationResult.value = null;
-		lastScanResult.value = null;
 		isProcessingTicket.value = false;
 		const errorData = JSON.stringify(error);
 
@@ -80,15 +73,8 @@ const validateTicketResource = createResource({
 const checkInResource = createResource({
 	url: "buzz.api.checkin_ticket",
 	onSuccess: (data) => {
-		if (data.success) {
-			validationResult.value = data;
-			lastScanResult.value = {
-				success: true,
-				message: data.message,
-				ticket: data.ticket,
-			};
-			showTicketModal.value = false;
-		}
+		validationResult.value = data;
+		showTicketModal.value = false;
 		isCheckingIn.value = false;
 	},
 	onError: (error) => {
@@ -116,7 +102,6 @@ export function useTicketValidation() {
 
 	const clearResults = () => {
 		validationResult.value = null;
-		lastScanResult.value = null;
 		isProcessingTicket.value = false;
 		isCheckingIn.value = false;
 		showTicketModal.value = false;
@@ -131,7 +116,6 @@ export function useTicketValidation() {
 		isProcessingTicket,
 		isCheckingIn,
 		validationResult,
-		lastScanResult,
 		showTicketModal,
 
 		// Methods
