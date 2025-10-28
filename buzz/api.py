@@ -672,6 +672,7 @@ def get_user_info() -> dict:
 		return {"is_logged_in": False}
 
 	user = frappe.get_cached_doc("User", frappe.session.user)
+
 	return {
 		"name": user.name,
 		"is_logged_in": True,
@@ -681,6 +682,7 @@ def get_user_info() -> dict:
 		"email": user.email,
 		"user_image": user.user_image,
 		"roles": user.roles,
+		"brand_image": frappe.get_single_value("Website Settings", "banner_image")
 	}
 
 
