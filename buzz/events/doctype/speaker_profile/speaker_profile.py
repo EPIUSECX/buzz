@@ -1,7 +1,7 @@
 # Copyright (c) 2025, BWH Studios and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
 from frappe.model.document import Document
 
 
@@ -26,3 +26,8 @@ class SpeakerProfile(Document):
 	# end: auto-generated types
 
 	pass
+
+
+def update_speaker_display_name(doc, event=None):
+	if doc.has_value_changed("full_name"):
+		frappe.db.set_value("Speaker Profile", {"user": doc.name}, "display_name", doc.full_name)

@@ -9,6 +9,11 @@ const routes = [
 		redirect: { name: "bookings-tab" },
 	},
 	{
+		path: "/check-in",
+		name: "check-in",
+		component: () => import("@/pages/CheckInScanner.vue"),
+	},
+	{
 		path: "/book-tickets/:eventRoute",
 		props: true,
 		name: "event-booking",
@@ -96,9 +101,9 @@ router.beforeEach(async (to, from, next) => {
 	}
 
 	if (to.name === "Login" && isLoggedIn) {
-		next({ name: "Home" });
+		next({ name: "dashboard" });
 	} else if (to.name !== "Login" && !isLoggedIn) {
-		window.location.href = `/login?redirect-to=${encodeURIComponent(to.fullPath)}`;
+		window.location.href = `/login?redirect-to=/dashboard${encodeURIComponent(to.fullPath)}`;
 	} else {
 		next();
 	}

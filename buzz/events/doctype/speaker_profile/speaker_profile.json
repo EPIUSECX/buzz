@@ -24,7 +24,8 @@
    "in_list_view": 1,
    "label": "User",
    "options": "User",
-   "reqd": 1
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "column_break_dbuw",
@@ -78,7 +79,7 @@
  "image_field": "display_image",
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-25 19:03:36.807212",
+ "modified": "2025-10-27 15:00:22.785410",
  "modified_by": "Administrator",
  "module": "Events",
  "name": "Speaker Profile",

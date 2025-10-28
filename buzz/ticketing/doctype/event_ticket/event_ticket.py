@@ -2,9 +2,8 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe.core.api.user_invitation import invite_by_email
 from frappe.model.document import Document
-
-from buzz.ticketing.doctype.event_ticket_type.event_ticket_type import EventTicketType
 
 
 class EventTicket(Document):
@@ -39,12 +38,30 @@ class EventTicket(Document):
 		except Exception as e:
 			frappe.log_error("Error sending ticket email: " + str(e))
 
-	def send_ticket_email(self):
+		try:
+			self.send_user_invitation()
+		except Exception as e:
+			frappe.log_error("Error sending user invitation: " + str(e))
+
+	def send_user_invitation(self):
+		invite_by_email(
+			emails=self.attendee_email,
+			roles=["Buzz User"],
+			redirect_to_path="/dashboard/account/tickets",
+			app_name="buzz",
+		)
+
+	def send_ticket_email(self, now: bool = False):
 		event_title, ticket_template, ticket_print_format, venue = frappe.get_cached_value(
 			"FE Event", self.event, ["title", "ticket_email_template", "ticket_print_format", "venue"]
 		)
 		subject = frappe._("Your ticket to {0} 🎟️").format(event_title)
-		args = {"doc": self, "event_title": event_title, "venue": venue}
+		args = {
+			"doc": self,
+			"event_doc": frappe.get_cached_doc("FE Event", self.event),
+			"event_title": event_title,
+			"venue": venue,
+		}
 
 		if ticket_template:
 			from frappe.email.doctype.email_template.email_template import get_email_template
@@ -61,6 +78,7 @@ class EventTicket(Document):
 			args=args,
 			reference_doctype=self.doctype,
 			reference_name=self.name,
+			now=now,
 			attachments=[
 				{
 					"print_format_attachment": 1,
