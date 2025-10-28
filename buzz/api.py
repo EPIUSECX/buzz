@@ -682,7 +682,7 @@ def get_user_info() -> dict:
 		"email": user.email,
 		"user_image": user.user_image,
 		"roles": user.roles,
-		"brand_image": frappe.get_single_value("Website Settings", "banner_image")
+		"brand_image": frappe.get_single_value("Website Settings", "banner_image"),
 	}
 
 
