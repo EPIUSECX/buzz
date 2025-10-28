@@ -2,7 +2,7 @@ import frappe
 
 doctypes = {
 	"Event Management Settings": "Buzz Settings",
-	"Buzz Event": "Buzz Event",
+	"FE Event": "Buzz Event",
 }
 
 
