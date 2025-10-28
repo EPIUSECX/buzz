@@ -12,12 +12,12 @@ class TalkProposal(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from buzz.proposals.doctype.proposal_speaker.proposal_speaker import ProposalSpeaker
+		from frappe.types import DF
 
 		description: DF.TextEditor | None
 		event: DF.Link
+		phone: DF.Phone | None
 		speakers: DF.Table[ProposalSpeaker]
 		status: DF.Literal["Review Pending", "Shortlisted", "Approved", "Rejected"]
 		submitted_by: DF.Link | None

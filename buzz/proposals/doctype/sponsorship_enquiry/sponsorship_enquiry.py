@@ -20,6 +20,7 @@ class SponsorshipEnquiry(Document):
 		company_name: DF.Data
 		country: DF.Link | None
 		event: DF.Link
+		phone: DF.Phone | None
 		status: DF.Literal["Approval Pending", "Payment Pending", "Paid", "Withdrawn"]
 		tier: DF.Link | None
 		website: DF.Data | None
