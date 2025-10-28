@@ -54,7 +54,7 @@
    "fieldname": "event",
    "fieldtype": "Link",
    "label": "Event",
-   "options": "FE Event",
+   "options": "Buzz Event",
    "reqd": 1
   },
   {
@@ -83,7 +83,7 @@
    "link_fieldname": "reference_docname"
   }
  ],
- "modified": "2025-10-09 18:52:42.004977",
+ "modified": "2025-10-28 16:17:50.193685",
  "modified_by": "Administrator",
  "module": "Proposals",
  "name": "Sponsorship Enquiry",

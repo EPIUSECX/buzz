@@ -45,7 +45,7 @@
    "label": "Event",
    "max_length": 0,
    "max_value": 0,
-   "options": "FE Event",
+   "options": "Buzz Event",
    "precision": "",
    "read_only": 0,
    "reqd": 1,

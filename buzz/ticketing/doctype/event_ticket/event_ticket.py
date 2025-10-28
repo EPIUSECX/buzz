@@ -53,12 +53,12 @@ class EventTicket(Document):
 
 	def send_ticket_email(self, now: bool = False):
 		event_title, ticket_template, ticket_print_format, venue = frappe.get_cached_value(
-			"FE Event", self.event, ["title", "ticket_email_template", "ticket_print_format", "venue"]
+			"Buzz Event", self.event, ["title", "ticket_email_template", "ticket_print_format", "venue"]
 		)
 		subject = frappe._("Your ticket to {0} 🎟️").format(event_title)
 		args = {
 			"doc": self,
-			"event_doc": frappe.get_cached_doc("FE Event", self.event),
+			"event_doc": frappe.get_cached_doc("Buzz Event", self.event),
 			"event_title": event_title,
 			"venue": venue,
 		}
