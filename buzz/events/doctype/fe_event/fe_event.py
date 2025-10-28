@@ -50,9 +50,6 @@ class FEEvent(Document):
 			self.route = frappe.website.utils.cleanup_page_name(self.title).replace("_", "-")
 
 	@frappe.whitelist()
-	def check_in(self, ticket_id: str, track: str | None = None):
-		frappe.get_doc({"doctype": "Event Check In", "ticket": ticket_id, "track": track}).insert().submit()
-
 	def after_insert(self):
 		self.create_default_records()
 
