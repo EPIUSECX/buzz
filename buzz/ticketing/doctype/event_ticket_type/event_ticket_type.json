@@ -25,7 +25,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Event",
-   "options": "FE Event",
+   "options": "Buzz Event",
    "reqd": 1
   },
   {
@@ -107,7 +107,7 @@
    "link_fieldname": "ticket_type"
   }
  ],
- "modified": "2025-10-10 14:44:14.178061",
+ "modified": "2025-10-28 16:17:49.999214",
  "modified_by": "Administrator",
  "module": "Ticketing",
  "name": "Event Ticket Type",

@@ -298,7 +298,7 @@
  "modified": "2025-10-10 15:06:55.236743",
  "modified_by": "Administrator",
  "module": "Events",
- "name": "FE Event",
+ "name": "Buzz Event",
  "naming_rule": "Autoincrement",
  "owner": "Administrator",
  "permissions": [

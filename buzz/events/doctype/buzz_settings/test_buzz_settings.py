@@ -11,9 +11,9 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
-class IntegrationTestEventManagementSettings(IntegrationTestCase):
+class IntegrationTestBuzzSettings(IntegrationTestCase):
 	"""
-	Integration tests for EventManagementSettings.
+	Integration tests for BuzzSettings.
 	Use this class for testing interactions between multiple components.
 	"""
 
