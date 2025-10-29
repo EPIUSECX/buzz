@@ -36,6 +36,16 @@
   "payments_tab",
   "payment_gateway",
   "column_break_klhx",
+  "sponsorships_tab",
+  "automations_section",
+  "auto_send_pitch_deck",
+  "section_break_edar",
+  "sponsor_deck_reply_to",
+  "sponsor_deck_email_template",
+  "column_break_awpd",
+  "sponsor_deck_cc",
+  "section_break_mieu",
+  "sponsor_deck_attachments",
   "customisations_tab",
   "ticket_email_template",
   "column_break_ukql",
@@ -228,6 +238,62 @@
    "fieldtype": "Table",
    "label": "Featured Speakers",
    "options": "Event Featured Speaker"
+  },
+  {
+   "fieldname": "sponsorships_tab",
+   "fieldtype": "Tab Break",
+   "label": "Sponsorships"
+  },
+  {
+   "fieldname": "automations_section",
+   "fieldtype": "Section Break",
+   "label": "Automations"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_send_pitch_deck",
+   "fieldtype": "Check",
+   "label": "Auto Send Pitch Deck?"
+  },
+  {
+   "fieldname": "section_break_edar",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_awpd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_mieu",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.auto_send_pitch_deck==true",
+   "fieldname": "sponsor_deck_email_template",
+   "fieldtype": "Link",
+   "label": "Email Template",
+   "mandatory_depends_on": "eval:doc.auto_send_pitch_deck==true",
+   "options": "Email Template"
+  },
+  {
+   "depends_on": "eval:doc.auto_send_pitch_deck==true",
+   "fieldname": "sponsor_deck_cc",
+   "fieldtype": "Small Text",
+   "label": "CC"
+  },
+  {
+   "depends_on": "eval:doc.auto_send_pitch_deck==true",
+   "fieldname": "sponsor_deck_reply_to",
+   "fieldtype": "Data",
+   "label": "Reply To",
+   "mandatory_depends_on": "eval:doc.auto_send_pitch_deck==true"
+  },
+  {
+   "depends_on": "eval:doc.auto_send_pitch_deck==true",
+   "fieldname": "sponsor_deck_attachments",
+   "fieldtype": "Table",
+   "label": "Attachments",
+   "options": "Sponsorship Deck Item"
   }
  ],
  "grid_page_length": 50,
@@ -295,7 +361,7 @@
    "link_fieldname": "event"
   }
  ],
- "modified": "2025-10-10 15:06:55.236743",
+ "modified": "2025-10-29 17:22:01.221301",
  "modified_by": "Administrator",
  "module": "Events",
  "name": "Buzz Event",
