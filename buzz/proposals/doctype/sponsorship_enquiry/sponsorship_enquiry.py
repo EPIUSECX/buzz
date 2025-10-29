@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe.email.doctype.email_template.email_template import get_email_template
 from frappe.model.document import Document
 
 from buzz.payments import mark_payment_as_received
@@ -20,6 +21,7 @@ class SponsorshipEnquiry(Document):
 		company_name: DF.Data
 		country: DF.Link | None
 		event: DF.Link
+		phone: DF.Phone | None
 		status: DF.Literal["Approval Pending", "Payment Pending", "Paid", "Withdrawn"]
 		tier: DF.Link | None
 		website: DF.Data | None
@@ -60,3 +62,31 @@ class SponsorshipEnquiry(Document):
 				"country": self.country,
 			}
 		).insert(ignore_permissions=True)
+
+	def after_insert(self):
+		try:
+			self.send_pitch_deck()
+		except Exception:
+			frappe.log_error("Error sending Sponsor Pitch Deck")
+
+	def send_pitch_deck(self, now=False):
+		event = frappe.get_cached_doc("Buzz Event", self.event)
+		if not event.auto_send_pitch_deck:
+			return
+
+		email_template = get_email_template(event.sponsor_deck_email_template, {"doc": self, "event": event})
+
+		subject = email_template.get("subject")
+		content = email_template.get("message")
+
+		frappe.sendmail(
+			recipients=[self.owner],
+			subject=subject,
+			cc=event.sponsor_deck_cc,
+			reply_to=event.sponsor_deck_reply_to,
+			content=content,
+			reference_doctype=self.doctype,
+			reference_name=self.name,
+			now=now,
+			attachments=[{"file_url": attachment.file} for attachment in event.sponsor_deck_attachments],
+		)

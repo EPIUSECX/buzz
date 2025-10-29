@@ -147,7 +147,7 @@ const emit = defineEmits(["select"]);
 const availableEvents = ref([]);
 
 const eventsResource = createListResource({
-	doctype: "FE Event",
+	doctype: "Buzz Event",
 	fields: ["name", "title", "start_date", "start_time", "end_date", "end_time"],
 	order_by: "start_date desc",
 	filters: {

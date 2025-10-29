@@ -29,7 +29,13 @@ scheduler_events = {"daily": ["buzz.tasks.unpublish_ticket_types_after_last_date
 
 before_tests = "buzz.install.before_tests"
 
-doc_events = {"User": {"after_insert": "buzz.utils.add_buzz_user_role"}}
+
+doc_events = {
+	"User": {
+		"after_insert": "buzz.utils.add_buzz_user_role",
+		"on_update": "buzz.events.doctype.speaker_profile.speaker_profile.update_speaker_display_name",
+	},
+}
 
 fixtures = [{"dt": "Role", "filters": {"name": ["Buzz User", "Frontdesk Manager"]}}]
 

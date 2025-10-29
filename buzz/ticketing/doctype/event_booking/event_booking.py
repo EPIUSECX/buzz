@@ -55,7 +55,7 @@ class EventBooking(Document):
 		if self.currency != "INR":
 			return
 
-		event_settings = frappe.get_cached_doc("Event Management Settings")
+		event_settings = frappe.get_cached_doc("Buzz Settings")
 		to_apply_gst = event_settings.apply_gst_on_bookings
 		if to_apply_gst:
 			self.tax_percentage = event_settings.gst_percentage or 18

@@ -5,19 +5,20 @@ import frappe
 from frappe.model.document import Document
 
 
-class FEEvent(Document):
+class BuzzEvent(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from buzz.events.doctype.event_featured_speaker.event_featured_speaker import EventFeaturedSpeaker
 		from buzz.events.doctype.schedule_item.schedule_item import ScheduleItem
+		from buzz.proposals.doctype.sponsorship_deck_item.sponsorship_deck_item import SponsorshipDeckItem
+		from frappe.types import DF
 
 		about: DF.TextEditor | None
+		auto_send_pitch_deck: DF.Check
 		banner_image: DF.AttachImage | None
 		category: DF.Link
 		end_date: DF.Date | None
@@ -33,6 +34,10 @@ class FEEvent(Document):
 		route: DF.Data | None
 		schedule: DF.Table[ScheduleItem]
 		short_description: DF.SmallText | None
+		sponsor_deck_attachments: DF.Table[SponsorshipDeckItem]
+		sponsor_deck_cc: DF.SmallText | None
+		sponsor_deck_email_template: DF.Link | None
+		sponsor_deck_reply_to: DF.Data | None
 		start_date: DF.Date
 		start_time: DF.Time | None
 		ticket_email_template: DF.Link | None
