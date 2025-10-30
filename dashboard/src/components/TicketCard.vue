@@ -21,7 +21,7 @@
 				{{ ticket.attendee_name }}
 			</h4>
 			<p class="text-sm text-ink-gray-7">Email: {{ ticket.attendee_email }}</p>
-			<p class="text-sm text-ink-gray-7">Ticket Type: {{ ticket.ticket_type }}</p>
+			<p v-if="!['Default', 'Normal'].includes(ticket.ticket_type)" class="text-sm text-ink-gray-7">Ticket Type: {{ ticket.ticket_type }}</p>
 
 			<!-- Add-ons Section -->
 			<div v-if="ticket.add_ons && ticket.add_ons.length > 0" class="mt-3">

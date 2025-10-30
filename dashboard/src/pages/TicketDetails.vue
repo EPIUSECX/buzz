@@ -19,7 +19,7 @@
 			<div class="flex gap-2">
 				<Button
 					variant="outline"
-					@click="downloadTicket"
+					:link="`/api/method/frappe.utils.print_format.download_pdf?doctype=Event%20Ticket&name=${ticketId}&format=Buzz%20Print%20Format&no_letterhead=1&letterhead=No%20Letterhead&settings=%7B%7D&_lang=en&pdf_generator=wkhtmltopdf`"
 					:loading="downloadingTicket"
 					size="sm"
 				>
@@ -83,7 +83,7 @@
 						<p class="text-ink-gray-9">{{ ticketDetails.data.doc.event_title }}</p>
 					</div>
 
-					<div>
+					<div v-if="!['Default', 'Normal'].includes(ticketDetails.data.doc.ticket_type_title)">
 						<label class="block text-sm font-medium text-ink-gray-6"
 							>Ticket Type</label
 						>
