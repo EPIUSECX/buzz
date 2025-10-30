@@ -38,10 +38,11 @@ class EventTicket(Document):
 		except Exception as e:
 			frappe.log_error("Error sending ticket email: " + str(e))
 
-		try:
-			self.send_user_invitation()
-		except Exception as e:
-			frappe.log_error("Error sending user invitation: " + str(e))
+		# TODO: bring back after we have templates
+		# try:
+		# 	self.send_user_invitation()
+		# except Exception as e:
+		# 	frappe.log_error("Error sending user invitation: " + str(e))
 
 	def send_user_invitation(self):
 		invite_by_email(
