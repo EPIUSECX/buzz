@@ -32,8 +32,8 @@
 						:key="addon.name"
 						class="flex justify-between items-center bg-surface-gray-1 px-2 py-1 rounded text-xs"
 					>
-						<span class="font-medium text-ink-gray-8">{{ addon.title }}:</span>
-						<span class="text-ink-gray-7">{{ addon.value }}</span>
+						<span class="font-medium text-ink-gray-8">{{ addon.title }}</span>
+						<span v-if="addon.user_selects_option" class="text-ink-gray-7">{{ addon.value }}</span>
 					</div>
 				</div>
 			</div>
