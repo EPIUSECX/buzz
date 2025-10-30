@@ -26,14 +26,14 @@
 			<!-- Add-ons Section -->
 			<div v-if="ticket.add_ons && ticket.add_ons.length > 0" class="mt-3">
 				<h5 class="text-sm font-medium text-ink-gray-8 mb-2">Add-ons:</h5>
-				<div class="space-y-1">
+				<div class="space-y-3">
 					<div
 						v-for="addon in ticket.add_ons"
 						:key="addon.name"
-						class="flex justify-between items-center bg-surface-gray-1 px-2 py-1 rounded text-xs"
+						class="bg-surface-gray-1 px-3 py-2 rounded text-xs"
 					>
-						<span class="font-medium text-ink-gray-8">{{ addon.title }}</span>
-						<span v-if="addon.user_selects_option" class="text-ink-gray-7">{{ addon.value }}</span>
+						<div class="font-medium text-ink-gray-8 mb-1">{{ addon.title }}</div>
+						<div v-if="addon.user_selects_option" class="text-ink-gray-7">{{ addon.value }}</div>
 					</div>
 				</div>
 			</div>
