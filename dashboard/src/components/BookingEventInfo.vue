@@ -12,33 +12,32 @@
 			</Button>
 		</div>
 
-		<div class="space-y-3">
-			<!-- Date & Time -->
-			<div class="flex justify-between items-center text-ink-gray-7">
-				<span class="flex items-center">
+		<div class="space-y-4">
+			<!-- Start Date & Time -->
+			<div>
+				<div class="flex items-center text-ink-gray-6 mb-1">
 					<LucideCalendarDays class="w-4 h-4 mr-2 flex-shrink-0" />
-					Date & Time
-				</span>
-				<div class="text-right">
-					<p class="font-medium text-ink-gray-9">{{ formatDate(event.start_date) }}</p>
-					<p v-if="event.start_time" class="text-sm text-ink-gray-6">
-						{{ formatTime(event.start_time) }}
-						<span v-if="event.time_zone" class="text-ink-gray-5">
-							({{ formatTimezone(event.time_zone) }})
-						</span>
-					</p>
+					<span class="text-sm font-medium">Start Date</span>
 				</div>
+				<p class="text-ink-gray-9 font-medium">{{ formatEventDateTime(event.start_date, event.start_time) }}</p>
+			</div>
+
+			<!-- End Date & Time -->
+			<div v-if="event.end_date">
+				<div class="flex items-center text-ink-gray-6 mb-1">
+					<LucideCalendarDays class="w-4 h-4 mr-2 flex-shrink-0" />
+					<span class="text-sm font-medium">End Date</span>
+				</div>
+				<p class="text-ink-gray-9 font-medium">{{ formatEventDateTime(event.end_date, event.end_time) }}</p>
 			</div>
 
 			<!-- Venue -->
-			<div v-if="event.venue" class="flex justify-between items-center text-ink-gray-7">
-				<span class="flex items-center">
+			<div v-if="event.venue">
+				<div class="flex items-center text-ink-gray-6 mb-1">
 					<LucideMapPin class="w-4 h-4 mr-2 flex-shrink-0" />
-					Venue
-				</span>
-				<div class="text-right">
-					<p class="font-medium text-ink-gray-9">{{ event.venue }}</p>
+					<span class="text-sm font-medium">Venue</span>
 				</div>
+				<p class="text-ink-gray-9 font-medium">{{ event.venue }}</p>
 			</div>
 
 			<!-- Event Description -->
@@ -68,33 +67,22 @@ defineProps({
 	},
 });
 
-const formatDate = (dateString) => {
-	if (!dateString) return "";
-	return dayjsLocal(dateString).format("dddd, MMMM D, YYYY");
-};
+// Helper function to format date and time together (matching TicketDetails.vue)
+const formatEventDateTime = (date, time) => {
+	if (!date) return "";
 
-const formatTime = (timeString) => {
-	if (!timeString) return "";
-	// Use a fixed date with the time string for parsing
-	const dt = dayjsLocal(`2000-01-01T${timeString}`);
-	return dt.format("h:mm A");
-};
+	// Create a date object from the date string
+	const dateObj = dayjsLocal(date);
 
-const formatTimezone = (timezone) => {
-	if (!timezone) return "";
-	try {
-		const now = new Date();
-		const abbreviation = new Intl.DateTimeFormat("en", {
-			timeZone: timezone,
-			timeZoneName: "short",
-		})
-			.formatToParts(now)
-			.find((part) => part.type === "timeZoneName")?.value;
-
-		return abbreviation || timezone.split("/")[1]?.replace("_", " ");
-	} catch (error) {
-		// Fallback to just the city name if timezone parsing fails
-		return timezone.split("/")[1]?.replace("_", " ") || timezone;
+	// If time is provided, combine it with the date
+	if (time) {
+		// Parse the time (format: "HH:mm:ss")
+		const [hours, minutes] = time.split(":");
+		const dateTimeObj = dateObj.hour(Number.parseInt(hours)).minute(Number.parseInt(minutes));
+		return dateTimeObj.format("MMMM DD, YYYY [at] h:mm A");
 	}
+
+	// If no time, just show the date
+	return dateObj.format("MMMM DD, YYYY");
 };
 </script>
