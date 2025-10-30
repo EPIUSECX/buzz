@@ -24,7 +24,7 @@
  "list_columns": [],
  "login_required": 1,
  "max_attachment_size": 5,
- "modified": "2025-10-30 16:50:00.273211",
+ "modified": "2025-10-30 16:52:36.708858",
  "modified_by": "Administrator",
  "module": "Buzz",
  "name": "apply-for-sponsorship",
@@ -35,6 +35,7 @@
  "show_attachments": 0,
  "show_list": 1,
  "show_sidebar": 0,
+ "success_url": "/dashboard/account/sponsorships",
  "title": "Apply for Sponsorship",
  "web_form_fields": [
   {
