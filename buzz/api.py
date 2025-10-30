@@ -315,7 +315,7 @@ def get_booking_details(booking_id: str) -> dict:
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ("in", (ticket.name for ticket in tickets))},
-		fields=["parent", "name", "add_on", "value", "add_on.title as add_on_title"],
+		fields=["parent", "name", "add_on", "value", "add_on.title as add_on_title", "add_on.user_selects_option as user_selects_option"],
 	)
 
 	# Get available options for add-ons
@@ -341,6 +341,7 @@ def get_booking_details(booking_id: str) -> dict:
 					"name": add_on.add_on,
 					"title": add_on.add_on_title,
 					"value": add_on.value,
+					"user_selects_option": add_on.user_selects_option,
 					"options": add_on_options_map.get(add_on.add_on, []),
 				}
 				ticket.add_ons.append(add_on_data)
@@ -568,7 +569,7 @@ def get_ticket_details(ticket_id: str) -> dict:
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ticket_id},
-		fields=["name", "add_on", "add_on.title as add_on_title", "value", "price", "currency"],
+		fields=["name", "add_on", "add_on.title as add_on_title", "value", "price", "currency", "add_on.user_selects_option as user_selects_option"],
 	)
 
 	# Get available options for add-ons (for preference management)
@@ -585,7 +586,7 @@ def get_ticket_details(ticket_id: str) -> dict:
 				event_add_on.options.split("\n") if event_add_on.options else []
 			)
 
-	# Enhance add-ons data with options
+	# Enhance add-ons data with options - include all add-ons but pass user_selects_option flag
 	enhanced_add_ons = []
 	for add_on in add_ons:
 		add_on_data = {
@@ -595,6 +596,7 @@ def get_ticket_details(ticket_id: str) -> dict:
 			"value": add_on.value,
 			"price": add_on.price,
 			"currency": add_on.currency,
+			"user_selects_option": add_on.user_selects_option,
 			"options": add_on_options_map.get(add_on.add_on, []),
 		}
 		enhanced_add_ons.append(add_on_data)
