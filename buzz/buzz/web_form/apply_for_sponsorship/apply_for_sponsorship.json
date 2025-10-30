@@ -24,7 +24,7 @@
  "list_columns": [],
  "login_required": 1,
  "max_attachment_size": 5,
- "modified": "2025-10-29 17:02:13.904579",
+ "modified": "2025-10-30 16:50:00.273211",
  "modified_by": "Administrator",
  "module": "Buzz",
  "name": "apply-for-sponsorship",
@@ -104,7 +104,7 @@
    "show_in_filter": 0
   },
   {
-   "allow_read_on_all_link_options": 0,
+   "allow_read_on_all_link_options": 1,
    "fieldname": "country",
    "fieldtype": "Link",
    "hidden": 0,
