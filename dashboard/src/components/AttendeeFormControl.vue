@@ -81,10 +81,7 @@
 						:model-value="getAddOnSelected(addOn.name)"
 						@update:model-value="updateAddOnSelection(addOn.name, $event)"
 						:id="`add_on_${addOn.name}_${index}`"
-						:label="`${addOn.title} (${formatPriceOrFree(
-							addOn.price,
-							addOn.currency
-						)})`"
+						:label="addOn.title"
 					/>
 
 					<div class="text-ink-gray-5 text-sm" v-if="addOn.description">
