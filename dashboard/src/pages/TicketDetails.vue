@@ -153,16 +153,7 @@
 							<p class="font-medium text-ink-gray-9">
 								{{ addon.title || addon.name }}
 							</p>
-							<p class="text-sm text-ink-gray-6">{{ addon.value }}</p>
-						</div>
-						<div class="text-right">
-							<p class="font-medium text-ink-gray-9">
-								{{
-									addon.price > 0
-										? formatCurrency(addon.price, addon.currency)
-										: "Free"
-								}}
-							</p>
+							<p v-if="addon.user_selects_option" class="text-sm text-ink-gray-6">{{ addon.value }}</p>
 						</div>
 					</div>
 				</div>
