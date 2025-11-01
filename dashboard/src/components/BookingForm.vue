@@ -121,10 +121,14 @@ const props = defineProps({
 
 // --- STATE ---
 // Use the booking form storage composable
-const { attendees, attendeeIdCounter } = useBookingFormStorage();
+const {
+	attendees,
+	attendeeIdCounter,
+	bookingCustomFields: storedBookingCustomFields,
+} = useBookingFormStorage();
 
-// Custom fields data
-const bookingCustomFieldsData = ref({});
+// Use stored booking custom fields data
+const bookingCustomFieldsData = storedBookingCustomFields;
 
 // Ensure user data is loaded
 if (!userResource.data) {

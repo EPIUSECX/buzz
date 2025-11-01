@@ -179,7 +179,23 @@ const ensureCustomFieldsExists = () => {
 
 const getCustomFieldValue = (fieldname) => {
 	ensureCustomFieldsExists();
-	return props.attendee.custom_fields[fieldname] || "";
+	const currentValue = props.attendee.custom_fields[fieldname];
+
+	// Apply default for select fields that don't have values yet
+	if (!currentValue && currentValue !== "") {
+		const field = props.customFields.find((f) => f.fieldname === fieldname);
+		if (field && field.fieldtype === "Select") {
+			const options = getFieldOptions(field);
+			if (options.length > 0) {
+				// Set the first option as default
+				const firstOptionValue = options[0].value;
+				updateCustomFieldValue(fieldname, firstOptionValue);
+				return firstOptionValue;
+			}
+		}
+	}
+
+	return currentValue || "";
 };
 
 const updateCustomFieldValue = (fieldname, value) => {
@@ -204,10 +220,47 @@ const getFormControlType = (fieldtype) => {
 // Get field options for select fields
 const getFieldOptions = (field) => {
 	if (field.fieldtype === "Select" && field.options) {
-		return field.options.split("\n").map((option) => ({
-			label: option.trim(),
-			value: option.trim(),
-		}));
+		// Handle different formats of options
+		let options = [];
+
+		if (typeof field.options === "string") {
+			// Split by newlines and filter out empty options
+			options = field.options
+				.split("\n")
+				.map((option) => option.trim())
+				.filter((option) => option.length > 0);
+		} else if (Array.isArray(field.options)) {
+			// If options is already an array
+			options = field.options.filter((option) => {
+				try {
+					return option != null && String(option).trim().length > 0;
+				} catch {
+					return false;
+				}
+			});
+		}
+
+		const formattedOptions = options.map((option) => {
+			const optionStr = String(option).trim();
+			return {
+				label: optionStr,
+				value: optionStr,
+			};
+		});
+
+		// Debug log for development
+		if (
+			process.env.NODE_ENV === "development" &&
+			formattedOptions.length === 0 &&
+			field.options
+		) {
+			console.warn(
+				`CustomField "${field.fieldname}" has Select type but no valid options:`,
+				field.options
+			);
+		}
+
+		return formattedOptions;
 	}
 	return [];
 };
