@@ -19,7 +19,9 @@
 					<LucideCalendarDays class="w-4 h-4 mr-2 flex-shrink-0" />
 					<span class="text-sm font-medium">Start Date</span>
 				</div>
-				<p class="text-ink-gray-9 font-medium">{{ formatEventDateTime(event.start_date, event.start_time) }}</p>
+				<p class="text-ink-gray-9 font-medium">
+					{{ formatEventDateTime(event.start_date, event.start_time) }}
+				</p>
 			</div>
 
 			<!-- End Date & Time -->
@@ -28,7 +30,9 @@
 					<LucideCalendarDays class="w-4 h-4 mr-2 flex-shrink-0" />
 					<span class="text-sm font-medium">End Date</span>
 				</div>
-				<p class="text-ink-gray-9 font-medium">{{ formatEventDateTime(event.end_date, event.end_time) }}</p>
+				<p class="text-ink-gray-9 font-medium">
+					{{ formatEventDateTime(event.end_date, event.end_time) }}
+				</p>
 			</div>
 
 			<!-- Venue -->

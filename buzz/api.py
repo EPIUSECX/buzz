@@ -315,7 +315,14 @@ def get_booking_details(booking_id: str) -> dict:
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ("in", (ticket.name for ticket in tickets))},
-		fields=["parent", "name", "add_on", "value", "add_on.title as add_on_title", "add_on.user_selects_option as user_selects_option"],
+		fields=[
+			"parent",
+			"name",
+			"add_on",
+			"value",
+			"add_on.title as add_on_title",
+			"add_on.user_selects_option as user_selects_option",
+		],
 	)
 
 	# Get available options for add-ons
@@ -569,7 +576,15 @@ def get_ticket_details(ticket_id: str) -> dict:
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ticket_id},
-		fields=["name", "add_on", "add_on.title as add_on_title", "value", "price", "currency", "add_on.user_selects_option as user_selects_option"],
+		fields=[
+			"name",
+			"add_on",
+			"add_on.title as add_on_title",
+			"value",
+			"price",
+			"currency",
+			"add_on.user_selects_option as user_selects_option",
+		],
 	)
 
 	# Get available options for add-ons (for preference management)

@@ -18,8 +18,10 @@ class EventBooking(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from buzz.ticketing.doctype.additional_field.additional_field import AdditionalField
 		from buzz.ticketing.doctype.event_booking_attendee.event_booking_attendee import EventBookingAttendee
 
+		additional_fields: DF.Table[AdditionalField]
 		amended_from: DF.Link | None
 		attendees: DF.Table[EventBookingAttendee]
 		currency: DF.Link
