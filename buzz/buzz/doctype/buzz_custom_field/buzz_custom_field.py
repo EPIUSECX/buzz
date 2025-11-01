@@ -20,7 +20,9 @@ class BuzzCustomField(Document):
 		fieldname: DF.Data | None
 		fieldtype: DF.Literal["Data", "Phone", "Email", "Select"]
 		label: DF.Data
+		mandatory: DF.Check
 		options: DF.SmallText | None
+		placeholder: DF.Data | None
 	# end: auto-generated types
 
 	pass

@@ -86,7 +86,7 @@ import AttendeeFormControl from "./AttendeeFormControl.vue";
 import BookingSummary from "./BookingSummary.vue";
 import EventDetailsHeader from "./EventDetailsHeader.vue";
 import CustomFieldsSection from "./CustomFieldsSection.vue";
-import { createResource } from "frappe-ui";
+import { createResource, toast } from "frappe-ui";
 import { useBookingFormStorage } from "../composables/useBookingFormStorage.js";
 import { useRouter } from "vue-router";
 import { userResource } from "../data/user.js";
@@ -323,9 +323,52 @@ const processBooking = createResource({
 	url: "buzz.api.process_booking",
 });
 
+// --- FORM VALIDATION ---
+const validateForm = () => {
+	const errors = [];
+
+	// Validate booking-level mandatory fields
+	for (const field of bookingCustomFields.value) {
+		if (field.mandatory) {
+			const value = bookingCustomFieldsData.value[field.fieldname];
+			if (!value || !String(value).trim()) {
+				errors.push(`${field.label} is required`);
+			}
+		}
+	}
+
+	// Validate ticket-level mandatory fields for each attendee
+	attendees.value.forEach((attendee, index) => {
+		for (const field of ticketCustomFields.value) {
+			if (field.mandatory) {
+				const value = attendee.custom_fields?.[field.fieldname];
+				if (!value || !String(value).trim()) {
+					errors.push(`${field.label} is required for Attendee #${index + 1}`);
+				}
+			}
+		}
+	});
+
+	return errors;
+};
+
 // --- FORM SUBMISSION ---
 async function submit() {
 	if (processBooking.loading) return;
+
+	// Validate mandatory fields
+	const validationErrors = validateForm();
+	if (validationErrors.length > 0) {
+		// Show the first error as toast, or all errors if only a few
+		if (validationErrors.length === 1) {
+			toast.error(validationErrors[0]);
+		} else if (validationErrors.length <= 3) {
+			toast.error(`Please fill in the required fields:\n${validationErrors.join("\n")}`);
+		} else {
+			toast.error(`Please fill in ${validationErrors.length} required fields.`);
+		}
+		return;
+	}
 
 	const attendees_payload = attendees.value.map((attendee) => {
 		const cleanAttendee = JSON.parse(JSON.stringify(attendee));
@@ -341,17 +384,17 @@ async function submit() {
 		}
 		cleanAttendee.add_ons = selected_add_ons;
 
-		// Clean custom fields - only include fields that have values and match our custom field definitions
+		// Clean custom fields - include all valid fields (mandatory fields are validated separately)
 		if (cleanAttendee.custom_fields) {
 			const cleanedCustomFields = {};
 			for (const [fieldName, value] of Object.entries(cleanAttendee.custom_fields)) {
-				if (value != null && String(value).trim()) {
-					// Check if this is a valid custom field for tickets
-					const isValidField = ticketCustomFields.value.some(
-						(cf) => cf.fieldname === fieldName
-					);
-					if (isValidField) {
-						cleanedCustomFields[fieldName] = value;
+				// Check if this is a valid custom field for tickets
+				const fieldDef = ticketCustomFields.value.find((cf) => cf.fieldname === fieldName);
+				if (fieldDef) {
+					// Include mandatory fields even if empty (validation already passed)
+					// For non-mandatory fields, only include if they have values
+					if (fieldDef.mandatory || (value != null && String(value).trim())) {
+						cleanedCustomFields[fieldName] = value || "";
 					}
 				}
 			}
@@ -365,13 +408,13 @@ async function submit() {
 	// Clean booking custom fields
 	const cleanedBookingCustomFields = {};
 	for (const [fieldName, value] of Object.entries(bookingCustomFieldsData.value)) {
-		if (value != null && String(value).trim()) {
-			// Check if this is a valid custom field for bookings
-			const isValidField = bookingCustomFields.value.some(
-				(cf) => cf.fieldname === fieldName
-			);
-			if (isValidField) {
-				cleanedBookingCustomFields[fieldName] = value;
+		// Check if this is a valid custom field for bookings
+		const fieldDef = bookingCustomFields.value.find((cf) => cf.fieldname === fieldName);
+		if (fieldDef) {
+			// Include mandatory fields even if empty (validation already passed)
+			// For non-mandatory fields, only include if they have values
+			if (fieldDef.mandatory || (value != null && String(value).trim())) {
+				cleanedBookingCustomFields[fieldName] = value || "";
 			}
 		}
 	}

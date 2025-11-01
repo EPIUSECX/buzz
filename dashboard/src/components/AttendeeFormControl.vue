@@ -63,7 +63,7 @@
 					:label="field.label"
 					:type="getFormControlType(field.fieldtype)"
 					:options="getFieldOptions(field)"
-					:required="true"
+					:required="field.mandatory"
 					:placeholder="getFieldPlaceholder(field)"
 				/>
 			</template>
@@ -212,17 +212,15 @@ const getFieldOptions = (field) => {
 	return [];
 };
 
-// Get placeholder text based on field type
+// Get placeholder text - use custom placeholder if available, otherwise no placeholder
 const getFieldPlaceholder = (field) => {
-	switch (field.fieldtype) {
-		case "Phone":
-			return "Enter phone number";
-		case "Email":
-			return "Enter email address";
-		case "Select":
-			return `Select ${field.label.toLowerCase()}`;
-		default:
-			return `Enter ${field.label.toLowerCase()}`;
+	// If custom placeholder is provided, use it
+	if (field.placeholder?.trim()) {
+		const placeholder = field.placeholder.trim();
+		return field.mandatory ? `${placeholder} (required)` : placeholder;
 	}
+
+	// If no custom placeholder is provided, return empty string (no placeholder)
+	return "";
 };
 </script>

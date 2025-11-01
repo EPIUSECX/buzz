@@ -9,6 +9,8 @@
   "event",
   "label",
   "fieldname",
+  "mandatory",
+  "placeholder",
   "column_break_fpgn",
   "applied_to",
   "fieldtype",
@@ -66,12 +68,23 @@
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled?"
+  },
+  {
+   "default": "0",
+   "fieldname": "mandatory",
+   "fieldtype": "Check",
+   "label": "Mandatory?"
+  },
+  {
+   "fieldname": "placeholder",
+   "fieldtype": "Data",
+   "label": "Placeholder"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-11-01 12:46:05.333010",
+ "modified": "2025-11-01 12:56:21.483252",
  "modified_by": "Administrator",
  "module": "Buzz",
  "name": "Buzz Custom Field",
