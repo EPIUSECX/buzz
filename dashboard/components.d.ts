@@ -19,6 +19,7 @@ declare module 'vue' {
     BuzzLogo: typeof import('./src/components/common/BuzzLogo.vue')['default']
     CancellationRequestDialog: typeof import('./src/components/CancellationRequestDialog.vue')['default']
     CancellationRequestNotice: typeof import('./src/components/CancellationRequestNotice.vue')['default']
+    CustomFieldsSection: typeof import('./src/components/CustomFieldsSection.vue')['default']
     EventDetailsHeader: typeof import('./src/components/EventDetailsHeader.vue')['default']
     EventSelector: typeof import('./src/components/EventSelector.vue')['default']
     EventSponsorForm: typeof import('./src/components/EventSponsorForm.vue')['default']

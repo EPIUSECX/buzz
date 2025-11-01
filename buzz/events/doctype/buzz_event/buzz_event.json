@@ -359,9 +359,14 @@
    "group": "General",
    "link_doctype": "Additional Event Page",
    "link_fieldname": "event"
+  },
+  {
+   "group": "Customisations",
+   "link_doctype": "Buzz Custom Field",
+   "link_fieldname": "event"
   }
  ],
- "modified": "2025-10-29 17:22:01.221301",
+ "modified": "2025-11-01 12:04:09.030132",
  "modified_by": "Administrator",
  "module": "Events",
  "name": "Buzz Event",

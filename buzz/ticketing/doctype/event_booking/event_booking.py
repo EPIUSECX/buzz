@@ -108,6 +108,37 @@ class EventBooking(Document):
 			if attendee.add_ons:
 				add_ons_list = frappe.get_cached_doc("Attendee Ticket Add-on", attendee.add_ons).add_ons
 				ticket.add_ons = add_ons_list
+
+			# Add custom fields from attendee to ticket
+			if attendee.custom_fields:
+				custom_fields_data = attendee.custom_fields
+				if isinstance(custom_fields_data, str):
+					try:
+						custom_fields_data = json.loads(custom_fields_data)
+					except (json.JSONDecodeError, TypeError):
+						custom_fields_data = {}
+
+				# Get custom field definitions for this event to get proper labels and types
+				custom_field_defs = frappe.db.get_all(
+					"Buzz Custom Field",
+					filters={"event": self.event, "enabled": 1, "applied_to": "Ticket"},
+					fields=["fieldname", "label", "fieldtype"],
+				)
+				custom_field_map = {cf["fieldname"]: cf for cf in custom_field_defs}
+
+				for field_name, field_value in custom_fields_data.items():
+					if field_value and field_name in custom_field_map:
+						field_def = custom_field_map[field_name]
+						ticket.append(
+							"additional_fields",
+							{
+								"fieldname": field_name,
+								"value": str(field_value),
+								"label": field_def["label"],
+								"fieldtype": field_def["fieldtype"],
+							},
+						)
+
 			ticket.flags.ignore_permissions = 1
 			ticket.insert().submit()
 

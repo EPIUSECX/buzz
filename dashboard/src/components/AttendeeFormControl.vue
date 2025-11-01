@@ -20,7 +20,7 @@
 			Attendee #{{ index + 1 }}
 		</h4>
 
-		<!-- Name and Email Fields -->
+		<!-- Name, Email and Custom Fields -->
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 			<FormControl
 				v-model="attendee.full_name"
@@ -36,10 +36,9 @@
 				required
 				type="email"
 			/>
-		</div>
 
-		<!-- Ticket Type -->
-		<div class="mb-4">
+			<!-- Ticket Type -->
+
 			<!-- Show selector only if there are multiple ticket types -->
 			<FormControl
 				v-if="availableTicketTypes.length > 1"
@@ -53,21 +52,21 @@
 					}))
 				"
 			/>
-			<!-- Show static info if only one ticket type -->
-			<div v-else-if="availableTicketTypes.length === 1" class="space-y-1">
-				<label class="block text-sm font-medium text-ink-gray-7 mb-3">Ticket Type</label>
-				<div class="text-base font-medium text-ink-gray-9">
-					{{ availableTicketTypes[0].title }}
-					<span class="text-ink-gray-6"
-						>({{
-							formatPriceOrFree(
-								availableTicketTypes[0].price,
-								availableTicketTypes[0].currency
-							)
-						}})</span
-					>
-				</div>
-			</div>
+
+			<!-- Custom Fields for Tickets integrated with basic fields -->
+			<template v-if="customFields.length > 0">
+				<FormControl
+					v-for="field in customFields"
+					:key="field.fieldname"
+					:model-value="getCustomFieldValue(field.fieldname)"
+					@update:model-value="updateCustomFieldValue(field.fieldname, $event)"
+					:label="field.label"
+					:type="getFormControlType(field.fieldtype)"
+					:options="getFieldOptions(field)"
+					:required="true"
+					:placeholder="getFieldPlaceholder(field)"
+				/>
+			</template>
 		</div>
 
 		<!-- Add-ons -->
@@ -119,6 +118,7 @@ const props = defineProps({
 	index: { type: Number, required: true },
 	availableTicketTypes: { type: Array, required: true },
 	availableAddOns: { type: Array, required: true },
+	customFields: { type: Array, default: () => [] },
 	showRemove: { type: Boolean, default: false },
 });
 
@@ -168,5 +168,61 @@ const updateAddOnSelection = (addOnName, selected) => {
 const updateAddOnOption = (addOnName, option) => {
 	ensureAddOnExists(addOnName);
 	props.attendee.add_ons[addOnName].option = option;
+};
+
+// Custom fields helper methods
+const ensureCustomFieldsExists = () => {
+	if (!props.attendee.custom_fields) {
+		props.attendee.custom_fields = {};
+	}
+};
+
+const getCustomFieldValue = (fieldname) => {
+	ensureCustomFieldsExists();
+	return props.attendee.custom_fields[fieldname] || "";
+};
+
+const updateCustomFieldValue = (fieldname, value) => {
+	ensureCustomFieldsExists();
+	props.attendee.custom_fields[fieldname] = value;
+};
+
+// Convert Frappe field types to form control types
+const getFormControlType = (fieldtype) => {
+	switch (fieldtype) {
+		case "Phone":
+			return "text";
+		case "Email":
+			return "email";
+		case "Select":
+			return "select";
+		default:
+			return "text";
+	}
+};
+
+// Get field options for select fields
+const getFieldOptions = (field) => {
+	if (field.fieldtype === "Select" && field.options) {
+		return field.options.split("\n").map((option) => ({
+			label: option.trim(),
+			value: option.trim(),
+		}));
+	}
+	return [];
+};
+
+// Get placeholder text based on field type
+const getFieldPlaceholder = (field) => {
+	switch (field.fieldtype) {
+		case "Phone":
+			return "Enter phone number";
+		case "Email":
+			return "Enter email address";
+		case "Select":
+			return `Select ${field.label.toLowerCase()}`;
+		default:
+			return `Enter ${field.label.toLowerCase()}`;
+	}
 };
 </script>

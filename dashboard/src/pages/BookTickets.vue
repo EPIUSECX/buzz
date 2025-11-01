@@ -10,6 +10,7 @@
 				:availableTicketTypes="eventBookingData.availableTicketTypes"
 				:gstSettings="eventBookingData.gstSettings"
 				:eventDetails="eventBookingData.eventDetails"
+				:customFields="eventBookingData.customFields"
 			/>
 		</div>
 	</div>
@@ -25,6 +26,7 @@ const eventBookingData = reactive({
 	availableTicketTypes: null,
 	gstSettings: null,
 	eventDetails: null,
+	customFields: null,
 });
 
 const props = defineProps({
@@ -48,6 +50,7 @@ const eventBookingResource = createResource({
 			gst_percentage: 18,
 		};
 		eventBookingData.eventDetails = data.event_details || {};
+		eventBookingData.customFields = data.custom_fields || [];
 	},
 	onError: (error) => {
 		if (error.message.includes("DoesNotExistError")) {

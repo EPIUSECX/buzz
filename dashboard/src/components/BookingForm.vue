@@ -7,6 +7,18 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<!-- Left Side: Form Inputs -->
 				<div class="lg:col-span-2">
+					<!-- Booking-level Custom Fields -->
+					<div
+						v-if="bookingCustomFields.length > 0"
+						class="bg-surface-white border border-outline-gray-3 rounded-xl p-4 md:p-6 mb-6 shadow-sm"
+					>
+						<CustomFieldsSection
+							v-model="bookingCustomFieldsData"
+							:custom-fields="bookingCustomFields"
+							title="Booking Information"
+						/>
+					</div>
+
 					<AttendeeFormControl
 						v-for="(attendee, index) in attendees"
 						:key="attendee.id"
@@ -14,6 +26,7 @@
 						:index="index"
 						:available-ticket-types="availableTicketTypes"
 						:available-add-ons="availableAddOns"
+						:custom-fields="ticketCustomFields"
 						:show-remove="attendees.length > 1"
 						@remove="removeAttendee(index)"
 					/>
@@ -68,10 +81,11 @@
 </template>
 
 <script setup>
-import { computed, watch } from "vue";
+import { computed, watch, ref } from "vue";
 import AttendeeFormControl from "./AttendeeFormControl.vue";
 import BookingSummary from "./BookingSummary.vue";
 import EventDetailsHeader from "./EventDetailsHeader.vue";
+import CustomFieldsSection from "./CustomFieldsSection.vue";
 import { createResource } from "frappe-ui";
 import { useBookingFormStorage } from "../composables/useBookingFormStorage.js";
 import { useRouter } from "vue-router";
@@ -99,11 +113,18 @@ const props = defineProps({
 		type: Object,
 		default: () => ({}),
 	},
+	customFields: {
+		type: Array,
+		default: () => [],
+	},
 });
 
 // --- STATE ---
 // Use the booking form storage composable
 const { attendees, attendeeIdCounter } = useBookingFormStorage();
+
+// Custom fields data
+const bookingCustomFieldsData = ref({});
 
 // Ensure user data is loaded
 if (!userResource.data) {
@@ -119,6 +140,15 @@ const ticketTypesMap = computed(() =>
 );
 const eventId = computed(() => props.availableTicketTypes[0]?.event || null);
 
+// Separate custom fields by applied_to
+const bookingCustomFields = computed(() =>
+	props.customFields.filter((field) => field.applied_to === "Booking")
+);
+
+const ticketCustomFields = computed(() =>
+	props.customFields.filter((field) => field.applied_to === "Ticket")
+);
+
 // --- METHODS ---
 const createNewAttendee = () => {
 	attendeeIdCounter.value++;
@@ -132,6 +162,7 @@ const createNewAttendee = () => {
 				? props.availableTicketTypes[0]?.name
 				: props.availableTicketTypes[0]?.name || "",
 		add_ons: {},
+		custom_fields: {},
 	};
 	for (const addOn of props.availableAddOns) {
 		newAttendee.add_ons[addOn.name] = {
@@ -309,12 +340,47 @@ async function submit() {
 			}
 		}
 		cleanAttendee.add_ons = selected_add_ons;
+
+		// Clean custom fields - only include fields that have values and match our custom field definitions
+		if (cleanAttendee.custom_fields) {
+			const cleanedCustomFields = {};
+			for (const [fieldName, value] of Object.entries(cleanAttendee.custom_fields)) {
+				if (value != null && String(value).trim()) {
+					// Check if this is a valid custom field for tickets
+					const isValidField = ticketCustomFields.value.some(
+						(cf) => cf.fieldname === fieldName
+					);
+					if (isValidField) {
+						cleanedCustomFields[fieldName] = value;
+					}
+				}
+			}
+			cleanAttendee.custom_fields =
+				Object.keys(cleanedCustomFields).length > 0 ? cleanedCustomFields : null;
+		}
+
 		return cleanAttendee;
 	});
+
+	// Clean booking custom fields
+	const cleanedBookingCustomFields = {};
+	for (const [fieldName, value] of Object.entries(bookingCustomFieldsData.value)) {
+		if (value != null && String(value).trim()) {
+			// Check if this is a valid custom field for bookings
+			const isValidField = bookingCustomFields.value.some(
+				(cf) => cf.fieldname === fieldName
+			);
+			if (isValidField) {
+				cleanedBookingCustomFields[fieldName] = value;
+			}
+		}
+	}
 
 	const final_payload = {
 		event: eventId.value,
 		attendees: attendees_payload,
+		booking_custom_fields:
+			Object.keys(cleanedBookingCustomFields).length > 0 ? cleanedBookingCustomFields : null,
 	};
 
 	processBooking.submit(final_payload, {
