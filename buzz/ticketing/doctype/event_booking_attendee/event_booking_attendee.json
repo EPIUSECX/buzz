@@ -8,6 +8,7 @@
  "field_order": [
   "full_name",
   "ticket_type",
+  "custom_fields",
   "column_break_xmfr",
   "email",
   "amount",
@@ -82,13 +83,18 @@
    "in_list_view": 1,
    "label": "Number of Add Ons",
    "read_only": 1
+  },
+  {
+   "fieldname": "custom_fields",
+   "fieldtype": "JSON",
+   "label": "Custom Fields"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-07-30 19:30:24.828429",
+ "modified": "2025-11-01 11:33:49.166876",
  "modified_by": "Administrator",
  "module": "Ticketing",
  "name": "Event Booking Attendee",

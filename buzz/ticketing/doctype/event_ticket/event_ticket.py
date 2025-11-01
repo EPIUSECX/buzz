@@ -15,9 +15,11 @@ class EventTicket(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from buzz.ticketing.doctype.additional_field.additional_field import AdditionalField
 		from buzz.ticketing.doctype.ticket_add_on_value.ticket_add_on_value import TicketAddonValue
 
 		add_ons: DF.Table[TicketAddonValue]
+		additional_fields: DF.Table[AdditionalField]
 		amended_from: DF.Link | None
 		attendee_email: DF.Data
 		attendee_name: DF.Data

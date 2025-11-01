@@ -83,7 +83,13 @@
 						<p class="text-ink-gray-9">{{ ticketDetails.data.doc.event_title }}</p>
 					</div>
 
-					<div v-if="!['Default', 'Normal'].includes(ticketDetails.data.doc.ticket_type_title)">
+					<div
+						v-if="
+							!['Default', 'Normal'].includes(
+								ticketDetails.data.doc.ticket_type_title
+							)
+						"
+					>
 						<label class="block text-sm font-medium text-ink-gray-6"
 							>Ticket Type</label
 						>
@@ -153,7 +159,9 @@
 							<p class="font-medium text-ink-gray-9">
 								{{ addon.title || addon.name }}
 							</p>
-							<p v-if="addon.user_selects_option" class="text-sm text-ink-gray-6">{{ addon.value }}</p>
+							<p v-if="addon.user_selects_option" class="text-sm text-ink-gray-6">
+								{{ addon.value }}
+							</p>
 						</div>
 					</div>
 				</div>

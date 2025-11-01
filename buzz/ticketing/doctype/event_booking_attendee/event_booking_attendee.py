@@ -18,6 +18,7 @@ class EventBookingAttendee(Document):
 		add_ons: DF.Link | None
 		amount: DF.Currency
 		currency: DF.Link
+		custom_fields: DF.JSON | None
 		email: DF.Data
 		full_name: DF.Data
 		number_of_add_ons: DF.Int

@@ -145,14 +145,43 @@ def get_event_booking_data(event_route: str) -> dict:
 
 	data.event_details = event_doc
 
+	# Custom Fields
+	custom_fields = frappe.db.get_all(
+		"Buzz Custom Field", filters={"event": event_doc.name, "enabled": 1}, fields=["*"]
+	)
+	data.custom_fields = custom_fields
+
 	return data
 
 
 @frappe.whitelist()
-def process_booking(attendees: list[dict], event: str) -> dict:
+def process_booking(attendees: list[dict], event: str, booking_custom_fields: dict | None = None) -> dict:
 	booking = frappe.new_doc("Event Booking")
 	booking.event = event
 	booking.user = frappe.session.user
+
+	# Add booking-level custom fields
+	if booking_custom_fields:
+		# Get custom field definitions for this event to get proper labels and types
+		booking_custom_field_defs = frappe.db.get_all(
+			"Buzz Custom Field",
+			filters={"event": event, "enabled": 1, "applied_to": "Booking"},
+			fields=["fieldname", "label", "fieldtype"],
+		)
+		custom_field_map = {cf["fieldname"]: cf for cf in booking_custom_field_defs}
+
+		for field_name, field_value in booking_custom_fields.items():
+			if field_value and field_name in custom_field_map:  # Only add non-empty values and valid fields
+				field_def = custom_field_map[field_name]
+				booking.append(
+					"additional_fields",
+					{
+						"fieldname": field_name,
+						"value": str(field_value),
+						"label": field_def["label"],
+						"fieldtype": field_def["fieldtype"],
+					},
+				)
 	for attendee in attendees:
 		add_ons = attendee.get("add_ons", None)
 		if add_ons:
@@ -161,15 +190,17 @@ def process_booking(attendees: list[dict], event: str) -> dict:
 				add_ons=add_ons,
 			)
 
-		booking.append(
-			"attendees",
-			{
-				"full_name": attendee.get("full_name"),
-				"email": attendee.get("email"),
-				"ticket_type": attendee.get("ticket_type"),
-				"add_ons": add_ons.name if add_ons else None,
-			},
-		)
+		# Process custom fields for this attendee
+		custom_fields = attendee.get("custom_fields", {})
+		attendee_row = {
+			"full_name": attendee.get("full_name"),
+			"email": attendee.get("email"),
+			"ticket_type": attendee.get("ticket_type"),
+			"add_ons": add_ons.name if add_ons else None,
+			"custom_fields": custom_fields if custom_fields else None,
+		}
+
+		booking.append("attendees", attendee_row)
 
 	booking.insert(ignore_permissions=True)
 	frappe.db.commit()
@@ -315,7 +346,14 @@ def get_booking_details(booking_id: str) -> dict:
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ("in", (ticket.name for ticket in tickets))},
-		fields=["parent", "name", "add_on", "value", "add_on.title as add_on_title", "add_on.user_selects_option as user_selects_option"],
+		fields=[
+			"parent",
+			"name",
+			"add_on",
+			"value",
+			"add_on.title as add_on_title",
+			"add_on.user_selects_option as user_selects_option",
+		],
 	)
 
 	# Get available options for add-ons
@@ -569,7 +607,15 @@ def get_ticket_details(ticket_id: str) -> dict:
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ticket_id},
-		fields=["name", "add_on", "add_on.title as add_on_title", "value", "price", "currency", "add_on.user_selects_option as user_selects_option"],
+		fields=[
+			"name",
+			"add_on",
+			"add_on.title as add_on_title",
+			"value",
+			"price",
+			"currency",
+			"add_on.user_selects_option as user_selects_option",
+		],
 	)
 
 	# Get available options for add-ons (for preference management)
