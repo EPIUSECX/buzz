@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "enabled",
   "title",
   "event",
   "price",
@@ -64,12 +65,18 @@
    "fieldname": "description",
    "fieldtype": "Small Text",
    "label": "Description"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled?"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-10 15:08:34.339344",
+ "modified": "2025-11-08 15:25:00.872093",
  "modified_by": "Administrator",
  "module": "Ticketing",
  "name": "Ticket Add-on",

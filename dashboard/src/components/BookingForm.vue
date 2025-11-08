@@ -209,6 +209,9 @@ const summary = computed(() => {
 		for (const addOnName in attendee.add_ons) {
 			if (attendee.add_ons[addOnName].selected) {
 				const addOnInfo = addOnsMap.value[addOnName];
+				// Skip if add-on no longer exists (e.g., was disabled)
+				if (!addOnInfo) continue;
+
 				if (!summaryData.add_ons[addOnName]) {
 					summaryData.add_ons[addOnName] = {
 						count: 0,
