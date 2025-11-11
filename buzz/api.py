@@ -219,6 +219,9 @@ def process_booking(attendees: list[dict], event: str, booking_custom_fields: di
 
 def create_add_on_doc(attendee_name: str, add_ons: list[dict]):
 	"""Create a new Attendee Ticket Add-on document."""
+	for add_on in add_ons:
+		add_on["currency"] = frappe.db.get_value("Ticket Add-on", add_on["add_on"], "currency")
+
 	return frappe.get_doc(
 		{"doctype": "Attendee Ticket Add-on", "add_ons": add_ons, "attendee_name": attendee_name}
 	).insert(ignore_permissions=True)
