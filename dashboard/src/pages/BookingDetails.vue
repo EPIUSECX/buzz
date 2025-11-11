@@ -31,7 +31,9 @@
 		</div>
 
 		<!-- Cancellation Request Section -->
+		<!-- Only show if there's a pending cancellation request (not yet submitted/accepted) -->
 		<CancellationRequestNotice
+			v-if="hasPendingCancellationRequest"
 			:cancellation-request="bookingDetails.data.cancellation_request"
 		/>
 
@@ -108,6 +110,15 @@ const canChangeAddOns = computed(() => {
 
 const canRequestCancellation = computed(() => {
 	return bookingDetails.data?.can_request_cancellation?.can_request_cancellation || false;
+});
+
+// Only show cancellation notice if there's a pending request (not yet submitted)
+const hasPendingCancellationRequest = computed(() => {
+	const cancellationRequest = bookingDetails.data?.cancellation_request;
+	const cancellationRequestedTickets = bookingDetails.data?.cancellation_requested_tickets || [];
+
+	// Show notice only if there's a cancellation request AND there are tickets with pending cancellation
+	return cancellationRequest && cancellationRequestedTickets.length > 0;
 });
 
 const onTicketTransferSuccess = () => {
