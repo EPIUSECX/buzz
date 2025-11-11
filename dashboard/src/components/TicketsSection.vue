@@ -29,6 +29,7 @@
 				:ticket="ticket"
 				:can-transfer="canTransferTickets"
 				:can-change-add-ons="canChangeAddOns"
+				:is-cancellation-requested="isCancellationRequestedTicket(ticket.name)"
 				:is-cancelled="isCancelledTicket(ticket.name)"
 				@transfer-success="$emit('transfer-success')"
 			/>
@@ -62,6 +63,10 @@ const props = defineProps({
 		type: Object,
 		default: null,
 	},
+	cancellationRequestedTickets: {
+		type: Array,
+		default: () => [],
+	},
 	cancelledTickets: {
 		type: Array,
 		default: () => [],
@@ -69,6 +74,10 @@ const props = defineProps({
 });
 
 defineEmits(["request-cancellation", "transfer-success"]);
+
+const isCancellationRequestedTicket = (ticketId) => {
+	return props.cancellationRequestedTickets?.includes(ticketId) || false;
+};
 
 const isCancelledTicket = (ticketId) => {
 	return props.cancelledTickets?.includes(ticketId) || false;

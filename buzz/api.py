@@ -340,6 +340,7 @@ def get_booking_details(booking_id: str) -> dict:
 			"ticket_type.title as ticket_type",
 			"qr_code",
 			"event",
+			"docstatus",
 		],
 	)
 
@@ -398,24 +399,29 @@ def get_booking_details(booking_id: str) -> dict:
 	existing_cancellation = frappe.db.get_value(
 		"Ticket Cancellation Request",
 		{"booking": booking_id},
-		["name", "cancel_full_booking", "creation"],
+		["name", "cancel_full_booking", "creation", "status", "docstatus"],
 		as_dict=True,
 	)
 	details.cancellation_request = existing_cancellation
 
-	# If there's a cancellation request, determine which tickets are cancelled
-	if existing_cancellation:
+	# Determine which tickets have cancellation requested (not yet submitted/accepted)
+	# and which tickets are actually cancelled (docstatus = 2)
+	details.cancellation_requested_tickets = []
+
+	if existing_cancellation and existing_cancellation.docstatus == 0:
+		# Cancellation request exists but not yet submitted (status is "In Review")
 		if existing_cancellation.cancel_full_booking:
-			# If full booking cancellation, all tickets are considered cancelled
-			details.cancelled_tickets = [ticket.name for ticket in tickets]
+			# If full booking cancellation requested, all tickets have pending cancellation
+			details.cancellation_requested_tickets = [ticket.name for ticket in tickets]
 		else:
-			# If partial cancellation, get specific tickets
-			cancelled_tickets = frappe.db.get_all(
+			# If partial cancellation requested, get specific tickets
+			requested_tickets = frappe.db.get_all(
 				"Ticket Cancellation Item", filters={"parent": existing_cancellation.name}, fields=["ticket"]
 			)
-			details.cancelled_tickets = [item.ticket for item in cancelled_tickets]
-	else:
-		details.cancelled_tickets = []
+			details.cancellation_requested_tickets = [item.ticket for item in requested_tickets]
+
+	# Get list of actually cancelled tickets (docstatus = 2)
+	details.cancelled_tickets = [ticket.name for ticket in tickets if ticket.docstatus == 2]
 
 	return details
 

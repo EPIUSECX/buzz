@@ -42,6 +42,7 @@
 			:can-transfer-tickets="canTransferTickets"
 			:can-change-add-ons="canChangeAddOns"
 			:cancellation-request="bookingDetails.data.cancellation_request"
+			:cancellation-requested-tickets="bookingDetails.data.cancellation_requested_tickets"
 			:cancelled-tickets="bookingDetails.data.cancelled_tickets"
 			@request-cancellation="showCancellationDialog = true"
 			@transfer-success="onTicketTransferSuccess"
