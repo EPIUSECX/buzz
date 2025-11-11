@@ -52,6 +52,8 @@
 			v-model="showCancellationDialog"
 			:tickets="bookingDetails.data.tickets"
 			:booking-id="bookingId"
+			:cancellation-requested-tickets="bookingDetails.data.cancellation_requested_tickets"
+			:cancelled-tickets="bookingDetails.data.cancelled_tickets"
 			@success="onCancellationRequestSuccess"
 		/>
 	</div>

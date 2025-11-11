@@ -693,7 +693,9 @@ def create_cancellation_request(booking_id: str, ticket_ids: list | None = None)
 		frappe.throw("Cancellation requests are no longer allowed for this event.")
 
 	# Check if a cancellation request already exists for this booking
-	existing_request = frappe.db.exists("Ticket Cancellation Request", {"booking": booking_id})
+	existing_request = frappe.db.exists(
+		"Ticket Cancellation Request", {"booking": booking_id, "docstatus": 0}
+	)
 	if existing_request:
 		frappe.throw("A cancellation request already exists for this booking.")
 
