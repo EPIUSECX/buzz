@@ -42,6 +42,8 @@ fixtures = [{"dt": "Role", "filters": {"name": ["Buzz User", "Frontdesk Manager"
 user_invitation = {"allowed_roles": {"Event Manager": ["Buzz User"], "Buzz User": ["Buzz User"]}}
 
 
+ignore_links_on_delete = ["Ticket Cancellation Request", "Ticket Add-on Value"]
+
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{

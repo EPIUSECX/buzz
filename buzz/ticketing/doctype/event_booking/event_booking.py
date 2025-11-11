@@ -155,3 +155,12 @@ class EventBooking(Document):
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), _("Booking Failed"))
 			frappe.throw(frappe._("Booking Failed! Please contact support."))
+
+	def on_cancel(self):
+		self.ignore_linked_doctypes = ["Ticket Cancellation Request"]
+		self.cancel_all_tickets()
+
+	def cancel_all_tickets(self):
+		tickets = frappe.db.get_all("Event Ticket", filters={"booking": self.name}, pluck="name")
+		for ticket in tickets:
+			frappe.get_cached_doc("Event Ticket", ticket).cancel()

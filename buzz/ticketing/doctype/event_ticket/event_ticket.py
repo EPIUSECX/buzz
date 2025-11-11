@@ -114,6 +114,9 @@ class EventTicket(Document):
 		).save(ignore_permissions=True)
 		self.qr_code = qr_code_file.file_url
 
+	def on_cancel(self):
+		self.ignore_linked_doctypes = ["Event Booking", "Ticket Cancellation Request"]
+
 
 def make_qr_image_with_data(data: str) -> bytes:
 	import io
