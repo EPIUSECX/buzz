@@ -68,6 +68,7 @@ def get_data(filters=None) -> list[dict]:
 			tav.value,
 		)
 		.where(ticket.event == filters.get("event"))
+		.where(ticket.docstatus == 1)
 	)
 
 	if filters.get("add_on_type"):
