@@ -116,6 +116,18 @@ class EventTicket(Document):
 
 	def on_cancel(self):
 		self.ignore_linked_doctypes = ["Event Booking", "Ticket Cancellation Request"]
+		self.send_cancellation_email()
+
+	def send_cancellation_email(self):
+		event_title = frappe.get_cached_value("Buzz Event", self.event, "title")
+		frappe.sendmail(
+			recipients=self.attendee_email,
+			subject=f"Your ticket to {event_title} is cancelled.",
+			message=f"Hi {self.attendee_name}, your ticket has been cancelled successfully. Sad to see you go.",
+			header=[("Ticket Cancelled"), "red"],
+			delayed=False,
+			retry=2,
+		)
 
 
 def make_qr_image_with_data(data: str) -> bytes:
