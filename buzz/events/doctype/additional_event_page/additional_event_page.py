@@ -26,12 +26,7 @@ class AdditionalEventPage(Document):
 
 	def validate_route(self):
 		if self.is_published and not self.route:
-			event_is_published, event_route = frappe.db.get_value(
-				"Buzz Event", self.event, ["is_published", "route"]
-			)
-
-			if not event_is_published:
-				frappe.throw(frappe._("Event must be published before publishing additional pages."))
+			event_route = frappe.db.get_value("Buzz Event", self.event, "route")
 
 			self.route = frappe.website.utils.cleanup_page_name(self.title).replace("_", "-")
 			self.route = event_route + "/" + self.route
