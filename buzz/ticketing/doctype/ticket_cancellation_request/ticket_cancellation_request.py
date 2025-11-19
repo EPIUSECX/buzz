@@ -1,7 +1,7 @@
 # Copyright (c) 2025, BWH Studios and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
 from frappe.model.document import Document
 
 
@@ -18,9 +18,20 @@ class TicketCancellationRequest(Document):
 			TicketCancellationItem,
 		)
 
+		amended_from: DF.Link | None
 		booking: DF.Link
 		cancel_full_booking: DF.Check
+		status: DF.Literal["In Review", "Accepted", "Rejected"]
 		tickets: DF.Table[TicketCancellationItem]
 	# end: auto-generated types
 
-	pass
+	def on_submit(self):
+		if self.status != "Accepted":
+			frappe.throw(frappe._("You must accept the request in order to submit it!"))
+
+		if self.cancel_full_booking:
+			frappe.get_cached_doc("Event Booking", self.booking).cancel()
+		else:
+			# cancel individual tickets
+			for ticket_item in self.tickets:
+				frappe.get_cached_doc("Event Ticket", ticket_item.ticket).cancel()

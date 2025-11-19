@@ -11,8 +11,30 @@
 			</div>
 		</div>
 
+		<!-- Access Denied Message -->
+		<div
+			v-if="!hasRequiredRole"
+			class="size-full flex justify-center items-center p-6 text-center min-h-[50vh]"
+		>
+			<div class="flex flex-col items-center space-y-4">
+				<div
+					class="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center"
+				>
+					<LucideShieldX class="w-8 h-8 text-red-600 dark:text-red-400" />
+				</div>
+				<div>
+					<h4 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+						Access Denied
+					</h4>
+					<p class="text-gray-600 dark:text-gray-400">
+						You don't have the required permissions to access the ticket scanner.
+					</p>
+				</div>
+			</div>
+		</div>
+
 		<!-- Main Content -->
-		<div class="size-full px-4 py-6">
+		<div v-else class="size-full px-4 py-6">
 			<!-- Event Selection -->
 			<EventSelector
 				v-if="!selectedEvent"
@@ -62,11 +84,20 @@
 
 <script setup>
 import { Button } from "frappe-ui";
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import EventSelector from "../components/EventSelector.vue";
 import QRScanner from "../components/QRScanner.vue";
 import TicketDetailsModal from "../components/TicketDetailsModal.vue";
 import { useTicketValidation } from "../composables/useTicketValidation.js";
+import LucideShieldX from "~icons/lucide/shield-x";
+import { userResource } from "../data/user.js";
+
+const userProfile = ref({});
+
+const hasRequiredRole = computed(() => {
+	if (!userProfile.value || !userProfile.value.roles) return false;
+	return userProfile.value.roles.some((role) => role.role === "Frontdesk Manager");
+});
 
 const { validationResult, clearResults } = useTicketValidation();
 
@@ -84,4 +115,8 @@ const clearEventSelection = () => {
 	selectedEvent.value = null;
 	clearResults();
 };
+
+onMounted(() => {
+	userProfile.value = { ...userResource.data };
+});
 </script>

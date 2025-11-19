@@ -28,10 +28,11 @@ scheduler_events = {"daily": ["buzz.tasks.unpublish_ticket_types_after_last_date
 
 before_tests = "buzz.install.before_tests"
 
+
 doc_events = {
-    "User": {
-        "after_insert": "buzz.utils.add_buzz_user_role",
-		"on_update": "buzz.events.doctype.speaker_profile.speaker_profile.update_speaker_display_name"
+	"User": {
+		"after_insert": "buzz.utils.add_buzz_user_role",
+		"on_update": "buzz.events.doctype.speaker_profile.speaker_profile.update_speaker_display_name",
 	},
 }
 
@@ -39,6 +40,8 @@ fixtures = [{"dt": "Role", "filters": {"name": ["Buzz User", "Frontdesk Manager"
 
 user_invitation = {"allowed_roles": {"Event Manager": ["Buzz User"], "Buzz User": ["Buzz User"]}}
 
+
+ignore_links_on_delete = ["Ticket Cancellation Request", "Ticket Add-on Value"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [

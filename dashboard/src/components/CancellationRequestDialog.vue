@@ -13,8 +13,33 @@
 					requests are subject to approval and refund policies.
 				</p>
 
+				<!-- Info about excluded tickets -->
+				<div
+					v-if="cancelledTickets.length > 0 || cancellationRequestedTickets.length > 0"
+					class="p-4 bg-surface-blue-1 border border-outline-blue-1 rounded-lg"
+				>
+					<p class="text-sm text-ink-blue-2">
+						<span v-if="cancelledTickets.length > 0">
+							{{ pluralize(cancelledTickets.length, "ticket") }} already cancelled.
+						</span>
+						<span
+							v-if="
+								cancelledTickets.length > 0 &&
+								cancellationRequestedTickets.length > 0
+							"
+						>
+							<br />
+						</span>
+						<span v-if="cancellationRequestedTickets.length > 0">
+							{{ pluralize(cancellationRequestedTickets.length, "ticket") }} already
+							have pending cancellation requests.
+						</span>
+					</p>
+				</div>
+
 				<!-- Select All Option -->
 				<div
+					v-if="availableTickets.length > 0"
 					class="border border-outline-gray-2 rounded-lg p-4 cursor-pointer transition-all hover:border-outline-gray-3 hover:bg-surface-gray-1"
 					:class="{
 						'border-outline-gray-4 bg-surface-gray-2': isAllSelected,
@@ -29,8 +54,13 @@
 							class="h-4 w-4 text-ink-gray-6 border-outline-gray-1 rounded focus:ring-ink-gray-5"
 						/>
 						<div>
-							<h3 class="font-semibold text-ink-gray-9">Select All Tickets</h3>
-							<p class="text-sm text-ink-gray-6">Cancel the entire booking</p>
+							<h3 class="font-semibold text-ink-gray-9">
+								Select All Available Tickets
+							</h3>
+							<p class="text-sm text-ink-gray-6">
+								Cancel all
+								{{ pluralize(availableTickets.length, "remaining ticket") }}
+							</p>
 						</div>
 					</div>
 				</div>
@@ -38,9 +68,15 @@
 				<!-- Individual Ticket Selection -->
 				<div class="space-y-4">
 					<h4 class="font-medium text-ink-gray-8">Or select individual tickets:</h4>
-					<div class="space-y-3 max-h-64 overflow-y-auto">
+					<div v-if="availableTickets.length === 0" class="text-center py-8">
+						<p class="text-ink-gray-5">
+							No tickets available for cancellation. All tickets are either already
+							cancelled or have pending cancellation requests.
+						</p>
+					</div>
+					<div v-else class="space-y-3 max-h-64 overflow-y-auto">
 						<div
-							v-for="ticket in tickets"
+							v-for="ticket in availableTickets"
 							:key="ticket.name"
 							class="border border-outline-gray-2 rounded-lg p-4 cursor-pointer transition-all hover:border-outline-gray-3 hover:bg-surface-gray-1"
 							:class="{
@@ -163,6 +199,14 @@ const props = defineProps({
 		type: String,
 		required: true,
 	},
+	cancellationRequestedTickets: {
+		type: Array,
+		default: () => [],
+	},
+	cancelledTickets: {
+		type: Array,
+		default: () => [],
+	},
 });
 
 const emit = defineEmits(["update:modelValue", "success"]);
@@ -172,14 +216,25 @@ const show = computed({
 	set: (val) => emit("update:modelValue", val),
 });
 
+// Filter out tickets that are already cancelled or have pending cancellation request
+const availableTickets = computed(() => {
+	return props.tickets.filter(
+		(ticket) =>
+			!props.cancelledTickets.includes(ticket.name) &&
+			!props.cancellationRequestedTickets.includes(ticket.name)
+	);
+});
+
 const selectedTickets = ref([]);
 const submitting = ref(false);
 
 const isAllSelected = computed({
-	get: () => selectedTickets.value.length === props.tickets.length && props.tickets.length > 0,
+	get: () =>
+		selectedTickets.value.length === availableTickets.value.length &&
+		availableTickets.value.length > 0,
 	set: (val) => {
 		if (val) {
-			selectedTickets.value = props.tickets.map((ticket) => ticket.name);
+			selectedTickets.value = availableTickets.value.map((ticket) => ticket.name);
 		} else {
 			selectedTickets.value = [];
 		}

@@ -9,10 +9,10 @@ def is_ticket_transfer_allowed(event_id: str | int) -> bool:
 	"""Check if ticket transfer is allowed based on event start date and settings."""
 	try:
 		# Get event details
-		event = frappe.get_cached_doc("FE Event", event_id)
+		event = frappe.get_cached_doc("Buzz Event", event_id)
 
 		# Get event management settings
-		settings = frappe.get_single("Event Management Settings")
+		settings = frappe.get_single("Buzz Settings")
 
 		# Default to 7 days if no setting is found
 		transfer_cutoff_days = settings.get("allow_transfer_ticket_before_event_start_days", 7)
@@ -37,10 +37,10 @@ def is_add_on_change_allowed(event_id: str | int) -> bool:
 	"""Check if add-on changes are allowed based on event start date and settings."""
 	try:
 		# Get event details
-		event = frappe.get_cached_doc("FE Event", event_id)
+		event = frappe.get_cached_doc("Buzz Event", event_id)
 
 		# Get event management settings
-		settings = frappe.get_cached_doc("Event Management Settings")
+		settings = frappe.get_cached_doc("Buzz Settings")
 
 		# Default to 7 days if no setting is found
 		add_on_change_cutoff_days = settings.get("allow_add_ons_change_before_event_start_days", 7)
@@ -77,10 +77,10 @@ def is_cancellation_request_allowed(event_id: str | int) -> bool:
 	"""Check if cancellation request is allowed based on event start date and settings."""
 	try:
 		# Get event details
-		event = frappe.get_cached_doc("FE Event", event_id)
+		event = frappe.get_cached_doc("Buzz Event", event_id)
 
 		# Get event management settings
-		settings = frappe.get_cached_doc("Event Management Settings")
+		settings = frappe.get_cached_doc("Buzz Settings")
 
 		# Default to 7 days if no setting is found
 		cancellation_cutoff_days = settings.get(
@@ -112,7 +112,7 @@ def can_request_cancellation(event_id: str | int) -> dict:
 @frappe.whitelist()
 def get_event_booking_data(event_route: str) -> dict:
 	data = frappe._dict()
-	event_doc = frappe.get_cached_doc("FE Event", {"route": event_route})
+	event_doc = frappe.get_cached_doc("Buzz Event", {"route": event_route})
 
 	# Ticket Types
 	available_ticket_types = []
@@ -127,7 +127,7 @@ def get_event_booking_data(event_route: str) -> dict:
 
 	# Ticket Add-ons
 	add_ons = frappe.db.get_all(
-		"Ticket Add-on", filters={"event": event_doc.name}, fields=["*"], order_by="title"
+		"Ticket Add-on", filters={"event": event_doc.name, "enabled": 1}, fields=["*"], order_by="title"
 	)
 
 	for add_on in add_ons:
@@ -137,7 +137,7 @@ def get_event_booking_data(event_route: str) -> dict:
 	data.available_add_ons = add_ons
 
 	# GST Settings
-	event_settings = frappe.get_cached_doc("Event Management Settings")
+	event_settings = frappe.get_cached_doc("Buzz Settings")
 	data.gst_settings = {
 		"apply_gst_on_bookings": event_settings.apply_gst_on_bookings,
 		"gst_percentage": event_settings.gst_percentage or 18,
@@ -145,14 +145,43 @@ def get_event_booking_data(event_route: str) -> dict:
 
 	data.event_details = event_doc
 
+	# Custom Fields
+	custom_fields = frappe.db.get_all(
+		"Buzz Custom Field", filters={"event": event_doc.name, "enabled": 1}, fields=["*"]
+	)
+	data.custom_fields = custom_fields
+
 	return data
 
 
 @frappe.whitelist()
-def process_booking(attendees: list[dict], event: str) -> dict:
+def process_booking(attendees: list[dict], event: str, booking_custom_fields: dict | None = None) -> dict:
 	booking = frappe.new_doc("Event Booking")
 	booking.event = event
 	booking.user = frappe.session.user
+
+	# Add booking-level custom fields
+	if booking_custom_fields:
+		# Get custom field definitions for this event to get proper labels and types
+		booking_custom_field_defs = frappe.db.get_all(
+			"Buzz Custom Field",
+			filters={"event": event, "enabled": 1, "applied_to": "Booking"},
+			fields=["fieldname", "label", "fieldtype"],
+		)
+		custom_field_map = {cf["fieldname"]: cf for cf in booking_custom_field_defs}
+
+		for field_name, field_value in booking_custom_fields.items():
+			if field_value and field_name in custom_field_map:  # Only add non-empty values and valid fields
+				field_def = custom_field_map[field_name]
+				booking.append(
+					"additional_fields",
+					{
+						"fieldname": field_name,
+						"value": str(field_value),
+						"label": field_def["label"],
+						"fieldtype": field_def["fieldtype"],
+					},
+				)
 	for attendee in attendees:
 		add_ons = attendee.get("add_ons", None)
 		if add_ons:
@@ -161,15 +190,17 @@ def process_booking(attendees: list[dict], event: str) -> dict:
 				add_ons=add_ons,
 			)
 
-		booking.append(
-			"attendees",
-			{
-				"full_name": attendee.get("full_name"),
-				"email": attendee.get("email"),
-				"ticket_type": attendee.get("ticket_type"),
-				"add_ons": add_ons.name if add_ons else None,
-			},
-		)
+		# Process custom fields for this attendee
+		custom_fields = attendee.get("custom_fields", {})
+		attendee_row = {
+			"full_name": attendee.get("full_name"),
+			"email": attendee.get("email"),
+			"ticket_type": attendee.get("ticket_type"),
+			"add_ons": add_ons.name if add_ons else None,
+			"custom_fields": custom_fields if custom_fields else None,
+		}
+
+		booking.append("attendees", attendee_row)
 
 	booking.insert(ignore_permissions=True)
 	frappe.db.commit()
@@ -188,6 +219,9 @@ def process_booking(attendees: list[dict], event: str) -> dict:
 
 def create_add_on_doc(attendee_name: str, add_ons: list[dict]):
 	"""Create a new Attendee Ticket Add-on document."""
+	for add_on in add_ons:
+		add_on["currency"] = frappe.db.get_value("Ticket Add-on", add_on["add_on"], "currency")
+
 	return frappe.get_doc(
 		{"doctype": "Attendee Ticket Add-on", "add_ons": add_ons, "attendee_name": attendee_name}
 	).insert(ignore_permissions=True)
@@ -223,7 +257,7 @@ def send_ticket_transfer_emails(ticket_id: str, old_name: str, old_email: str, n
 	try:
 		# Get ticket and event details
 		ticket = frappe.get_doc("Event Ticket", ticket_id)
-		event = frappe.get_doc("FE Event", ticket.event)
+		event = frappe.get_doc("Buzz Event", ticket.event)
 		booking = frappe.get_doc("Event Booking", ticket.booking)
 
 		# Email to old attendee - notification of transfer
@@ -309,13 +343,21 @@ def get_booking_details(booking_id: str) -> dict:
 			"ticket_type.title as ticket_type",
 			"qr_code",
 			"event",
+			"docstatus",
 		],
 	)
 
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ("in", (ticket.name for ticket in tickets))},
-		fields=["parent", "name", "add_on", "value", "add_on.title as add_on_title"],
+		fields=[
+			"parent",
+			"name",
+			"add_on",
+			"value",
+			"add_on.title as add_on_title",
+			"add_on.user_selects_option as user_selects_option",
+		],
 	)
 
 	# Get available options for add-ons
@@ -341,13 +383,14 @@ def get_booking_details(booking_id: str) -> dict:
 					"name": add_on.add_on,
 					"title": add_on.add_on_title,
 					"value": add_on.value,
+					"user_selects_option": add_on.user_selects_option,
 					"options": add_on_options_map.get(add_on.add_on, []),
 				}
 				ticket.add_ons.append(add_on_data)
 		ticket.add_ons = sorted(ticket.add_ons, key=lambda x: x["title"])
 
 	details.tickets = tickets
-	details.event = frappe.get_cached_doc("FE Event", booking_doc.event)
+	details.event = frappe.get_cached_doc("Buzz Event", booking_doc.event)
 	details.can_transfer_ticket = can_transfer_ticket(details.event.name)
 	details.can_change_add_ons = can_change_add_ons(details.event.name)
 	details.can_request_cancellation = can_request_cancellation(details.event.name)
@@ -359,24 +402,29 @@ def get_booking_details(booking_id: str) -> dict:
 	existing_cancellation = frappe.db.get_value(
 		"Ticket Cancellation Request",
 		{"booking": booking_id},
-		["name", "cancel_full_booking", "creation"],
+		["name", "cancel_full_booking", "creation", "status", "docstatus"],
 		as_dict=True,
 	)
 	details.cancellation_request = existing_cancellation
 
-	# If there's a cancellation request, determine which tickets are cancelled
-	if existing_cancellation:
+	# Determine which tickets have cancellation requested (not yet submitted/accepted)
+	# and which tickets are actually cancelled (docstatus = 2)
+	details.cancellation_requested_tickets = []
+
+	if existing_cancellation and existing_cancellation.docstatus == 0:
+		# Cancellation request exists but not yet submitted (status is "In Review")
 		if existing_cancellation.cancel_full_booking:
-			# If full booking cancellation, all tickets are considered cancelled
-			details.cancelled_tickets = [ticket.name for ticket in tickets]
+			# If full booking cancellation requested, all tickets have pending cancellation
+			details.cancellation_requested_tickets = [ticket.name for ticket in tickets]
 		else:
-			# If partial cancellation, get specific tickets
-			cancelled_tickets = frappe.db.get_all(
+			# If partial cancellation requested, get specific tickets
+			requested_tickets = frappe.db.get_all(
 				"Ticket Cancellation Item", filters={"parent": existing_cancellation.name}, fields=["ticket"]
 			)
-			details.cancelled_tickets = [item.ticket for item in cancelled_tickets]
-	else:
-		details.cancelled_tickets = []
+			details.cancellation_requested_tickets = [item.ticket for item in requested_tickets]
+
+	# Get list of actually cancelled tickets (docstatus = 2)
+	details.cancelled_tickets = [ticket.name for ticket in tickets if ticket.docstatus == 2]
 
 	return details
 
@@ -430,7 +478,7 @@ def get_sponsorship_details(enquiry_id: str) -> dict:
 	# Get event details
 	event_details = {}
 	if enquiry.event:
-		event = frappe.get_cached_doc("FE Event", enquiry.event)
+		event = frappe.get_cached_doc("Buzz Event", enquiry.event)
 		event_details = {
 			"title": event.title,
 			"short_description": getattr(event, "short_description", ""),
@@ -488,7 +536,7 @@ def get_user_sponsorship_inquiries() -> list:
 	# Get event titles and tier titles
 	for inquiry in inquiries:
 		if inquiry.event:
-			event_title = frappe.db.get_value("FE Event", inquiry.event, "title")
+			event_title = frappe.db.get_value("Buzz Event", inquiry.event, "title")
 			inquiry["event_title"] = event_title
 
 		if inquiry.tier:
@@ -568,7 +616,15 @@ def get_ticket_details(ticket_id: str) -> dict:
 	add_ons = frappe.db.get_all(
 		"Ticket Add-on Value",
 		filters={"parent": ticket_id},
-		fields=["name", "add_on", "add_on.title as add_on_title", "value", "price", "currency"],
+		fields=[
+			"name",
+			"add_on",
+			"add_on.title as add_on_title",
+			"value",
+			"price",
+			"currency",
+			"add_on.user_selects_option as user_selects_option",
+		],
 	)
 
 	# Get available options for add-ons (for preference management)
@@ -585,7 +641,7 @@ def get_ticket_details(ticket_id: str) -> dict:
 				event_add_on.options.split("\n") if event_add_on.options else []
 			)
 
-	# Enhance add-ons data with options
+	# Enhance add-ons data with options - include all add-ons but pass user_selects_option flag
 	enhanced_add_ons = []
 	for add_on in add_ons:
 		add_on_data = {
@@ -595,12 +651,13 @@ def get_ticket_details(ticket_id: str) -> dict:
 			"value": add_on.value,
 			"price": add_on.price,
 			"currency": add_on.currency,
+			"user_selects_option": add_on.user_selects_option,
 			"options": add_on_options_map.get(add_on.add_on, []),
 		}
 		enhanced_add_ons.append(add_on_data)
 
 	details.add_ons = enhanced_add_ons
-	details.event = frappe.get_cached_doc("FE Event", ticket_doc.event)
+	details.event = frappe.get_cached_doc("Buzz Event", ticket_doc.event)
 
 	# Only include booking information if the current user is the owner of the booking
 	booking_doc = None
@@ -639,7 +696,9 @@ def create_cancellation_request(booking_id: str, ticket_ids: list | None = None)
 		frappe.throw("Cancellation requests are no longer allowed for this event.")
 
 	# Check if a cancellation request already exists for this booking
-	existing_request = frappe.db.exists("Ticket Cancellation Request", {"booking": booking_id})
+	existing_request = frappe.db.exists(
+		"Ticket Cancellation Request", {"booking": booking_id, "docstatus": 0}
+	)
 	if existing_request:
 		frappe.throw("A cancellation request already exists for this booking.")
 
@@ -672,6 +731,7 @@ def get_user_info() -> dict:
 		return {"is_logged_in": False}
 
 	user = frappe.get_cached_doc("User", frappe.session.user)
+
 	return {
 		"name": user.name,
 		"is_logged_in": True,
@@ -681,6 +741,7 @@ def get_user_info() -> dict:
 		"email": user.email,
 		"user_image": user.user_image,
 		"roles": user.roles,
+		"brand_image": frappe.get_single_value("Website Settings", "banner_image"),
 	}
 
 
@@ -691,7 +752,7 @@ def validate_ticket_for_checkin(ticket_id: str) -> dict:
 		frappe.throw(_("Ticket not found"))
 
 	ticket_doc = frappe.get_cached_doc("Event Ticket", ticket_id)
-	event_doc = frappe.get_cached_doc("FE Event", ticket_doc.event)
+	event_doc = frappe.get_cached_doc("Buzz Event", ticket_doc.event)
 	ticket_type_doc = (
 		frappe.get_cached_doc("Event Ticket Type", ticket_doc.ticket_type) if ticket_doc.ticket_type else None
 	)

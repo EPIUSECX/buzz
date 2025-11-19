@@ -10,6 +10,8 @@
   "user",
   "section_break_xvkp",
   "attendees",
+  "section_break_suav",
+  "additional_fields",
   "section_break_tsys",
   "net_amount",
   "tax_percentage",
@@ -51,7 +53,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Event",
-   "options": "FE Event",
+   "options": "Buzz Event",
    "reqd": 1
   },
   {
@@ -111,6 +113,16 @@
    "label": "Tax Amount",
    "options": "currency",
    "read_only": 1
+  },
+  {
+   "fieldname": "section_break_suav",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "additional_fields",
+   "fieldtype": "Table",
+   "label": "Additional Fields",
+   "options": "Additional Field"
   }
  ],
  "grid_page_length": 50,
@@ -126,7 +138,7 @@
    "link_fieldname": "reference_docname"
   }
  ],
- "modified": "2025-10-10 14:43:17.685806",
+ "modified": "2025-11-01 11:38:55.175532",
  "modified_by": "Administrator",
  "module": "Ticketing",
  "name": "Event Booking",

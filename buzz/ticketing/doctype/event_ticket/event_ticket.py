@@ -15,9 +15,11 @@ class EventTicket(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from buzz.ticketing.doctype.additional_field.additional_field import AdditionalField
 		from buzz.ticketing.doctype.ticket_add_on_value.ticket_add_on_value import TicketAddonValue
 
 		add_ons: DF.Table[TicketAddonValue]
+		additional_fields: DF.Table[AdditionalField]
 		amended_from: DF.Link | None
 		attendee_email: DF.Data
 		attendee_name: DF.Data
@@ -38,10 +40,11 @@ class EventTicket(Document):
 		except Exception as e:
 			frappe.log_error("Error sending ticket email: " + str(e))
 
-		try:
-			self.send_user_invitation()
-		except Exception as e:
-			frappe.log_error("Error sending user invitation: " + str(e))
+		# TODO: bring back after we have templates
+		# try:
+		# 	self.send_user_invitation()
+		# except Exception as e:
+		# 	frappe.log_error("Error sending user invitation: " + str(e))
 
 	def send_user_invitation(self):
 		invite_by_email(
@@ -53,12 +56,12 @@ class EventTicket(Document):
 
 	def send_ticket_email(self, now: bool = False):
 		event_title, ticket_template, ticket_print_format, venue = frappe.get_cached_value(
-			"FE Event", self.event, ["title", "ticket_email_template", "ticket_print_format", "venue"]
+			"Buzz Event", self.event, ["title", "ticket_email_template", "ticket_print_format", "venue"]
 		)
 		subject = frappe._("Your ticket to {0} 🎟️").format(event_title)
 		args = {
 			"doc": self,
-			"event_doc": frappe.get_cached_doc("FE Event", self.event),
+			"event_doc": frappe.get_cached_doc("Buzz Event", self.event),
 			"event_title": event_title,
 			"venue": venue,
 		}
@@ -110,6 +113,21 @@ class EventTicket(Document):
 			}
 		).save(ignore_permissions=True)
 		self.qr_code = qr_code_file.file_url
+
+	def on_cancel(self):
+		self.ignore_linked_doctypes = ["Event Booking", "Ticket Cancellation Request"]
+		self.send_cancellation_email()
+
+	def send_cancellation_email(self):
+		event_title = frappe.get_cached_value("Buzz Event", self.event, "title")
+		frappe.sendmail(
+			recipients=self.attendee_email,
+			subject=f"Your ticket to {event_title} is cancelled.",
+			message=f"Hi {self.attendee_name}, your ticket has been cancelled successfully. Sad to see you go.",
+			header=[("Ticket Cancelled"), "red"],
+			delayed=False,
+			retry=2,
+		)
 
 
 def make_qr_image_with_data(data: str) -> bytes:

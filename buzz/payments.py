@@ -3,7 +3,7 @@ from payments.utils import get_payment_gateway_controller
 
 
 def get_payment_gateway_for_event(event: str):
-	return frappe.get_cached_value("FE Event", event, "payment_gateway")
+	return frappe.get_cached_value("Buzz Event", event, "payment_gateway")
 
 
 def get_controller(payment_gateway):
@@ -13,7 +13,7 @@ def get_controller(payment_gateway):
 @frappe.whitelist()
 def get_payment_link_for_booking(booking_id: str, redirect_to: str = "/events") -> str:
 	booking_doc = frappe.get_cached_doc("Event Booking", booking_id)
-	event_title = frappe.get_cached_value("FE Event", booking_doc.event, "title")
+	event_title = frappe.get_cached_value("Buzz Event", booking_doc.event, "title")
 	payment_gateway = get_payment_gateway_for_event(booking_doc.event)
 	return get_payment_link(
 		"Event Booking",
@@ -32,7 +32,7 @@ def get_payment_link_for_sponsorship(
 ) -> str:
 	tier_doc = frappe.get_cached_doc("Sponsorship Tier", sponsorship_tier)
 	payment_gateway = get_payment_gateway_for_event(tier_doc.event)
-	event_title = frappe.get_cached_value("FE Event", tier_doc.event, "title")
+	event_title = frappe.get_cached_value("Buzz Event", tier_doc.event, "title")
 	frappe.db.set_value(
 		"Sponsorship Enquiry", sponsorship_enquiry, "tier", sponsorship_tier
 	)  # TODO: rethink later
@@ -74,7 +74,7 @@ def get_payment_link(
 		"redirect_to": redirect_to,
 		"payment": payment.name,
 	}
-	if payment_gateway == "Razorpay":
+	if payment_gateway == "Razorpay" or payment_gateway == "Paymob":
 		order = controller.create_order(**payment_details)
 		payment_details.update({"order_id": order.get("id")})
 
@@ -128,6 +128,10 @@ def mark_payment_as_received(reference_doctype: str, reference_docname: str):
 		payment_gateway = data.get("payment_gateway")
 		if payment_gateway == "Razorpay":
 			payment_id = "razorpay_payment_id"
+
+		if payment_gateway == "Paymob":
+			payment_id = "paymob_payment_id"
+
 		elif "Stripe" in payment_gateway:
 			payment_id = "stripe_token_id"
 		else:

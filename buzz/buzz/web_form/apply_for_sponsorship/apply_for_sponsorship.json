@@ -4,7 +4,7 @@
  "allow_delete": 0,
  "allow_edit": 0,
  "allow_incomplete": 0,
- "allow_multiple": 0,
+ "allow_multiple": 1,
  "allow_print": 0,
  "amount": 0.0,
  "amount_based_on_field": 0,
@@ -24,7 +24,7 @@
  "list_columns": [],
  "login_required": 1,
  "max_attachment_size": 5,
- "modified": "2025-10-10 06:12:41.087247",
+ "modified": "2025-10-30 16:52:36.708858",
  "modified_by": "Administrator",
  "module": "Buzz",
  "name": "apply-for-sponsorship",
@@ -35,6 +35,7 @@
  "show_attachments": 0,
  "show_list": 1,
  "show_sidebar": 0,
+ "success_url": "/dashboard/account/sponsorships",
  "title": "Apply for Sponsorship",
  "web_form_fields": [
   {
@@ -45,7 +46,7 @@
    "label": "Event",
    "max_length": 0,
    "max_value": 0,
-   "options": "FE Event",
+   "options": "Buzz Event",
    "precision": "",
    "read_only": 0,
    "reqd": 1,
@@ -104,7 +105,7 @@
    "show_in_filter": 0
   },
   {
-   "allow_read_on_all_link_options": 0,
+   "allow_read_on_all_link_options": 1,
    "fieldname": "country",
    "fieldtype": "Link",
    "hidden": 0,
@@ -112,6 +113,19 @@
    "max_length": 0,
    "max_value": 0,
    "options": "Country",
+   "precision": "",
+   "read_only": 0,
+   "reqd": 1,
+   "show_in_filter": 0
+  },
+  {
+   "allow_read_on_all_link_options": 0,
+   "fieldname": "phone",
+   "fieldtype": "Phone",
+   "hidden": 0,
+   "label": "Phone Number",
+   "max_length": 0,
+   "max_value": 0,
    "precision": "",
    "read_only": 0,
    "reqd": 1,

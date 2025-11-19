@@ -18,8 +18,10 @@ class EventBooking(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from buzz.ticketing.doctype.additional_field.additional_field import AdditionalField
 		from buzz.ticketing.doctype.event_booking_attendee.event_booking_attendee import EventBookingAttendee
 
+		additional_fields: DF.Table[AdditionalField]
 		amended_from: DF.Link | None
 		attendees: DF.Table[EventBookingAttendee]
 		currency: DF.Link
@@ -55,7 +57,7 @@ class EventBooking(Document):
 		if self.currency != "INR":
 			return
 
-		event_settings = frappe.get_cached_doc("Event Management Settings")
+		event_settings = frappe.get_cached_doc("Buzz Settings")
 		to_apply_gst = event_settings.apply_gst_on_bookings
 		if to_apply_gst:
 			self.tax_percentage = event_settings.gst_percentage or 18
@@ -106,6 +108,37 @@ class EventBooking(Document):
 			if attendee.add_ons:
 				add_ons_list = frappe.get_cached_doc("Attendee Ticket Add-on", attendee.add_ons).add_ons
 				ticket.add_ons = add_ons_list
+
+			# Add custom fields from attendee to ticket
+			if attendee.custom_fields:
+				custom_fields_data = attendee.custom_fields
+				if isinstance(custom_fields_data, str):
+					try:
+						custom_fields_data = json.loads(custom_fields_data)
+					except (json.JSONDecodeError, TypeError):
+						custom_fields_data = {}
+
+				# Get custom field definitions for this event to get proper labels and types
+				custom_field_defs = frappe.db.get_all(
+					"Buzz Custom Field",
+					filters={"event": self.event, "enabled": 1, "applied_to": "Ticket"},
+					fields=["fieldname", "label", "fieldtype"],
+				)
+				custom_field_map = {cf["fieldname"]: cf for cf in custom_field_defs}
+
+				for field_name, field_value in custom_fields_data.items():
+					if field_value and field_name in custom_field_map:
+						field_def = custom_field_map[field_name]
+						ticket.append(
+							"additional_fields",
+							{
+								"fieldname": field_name,
+								"value": str(field_value),
+								"label": field_def["label"],
+								"fieldtype": field_def["fieldtype"],
+							},
+						)
+
 			ticket.flags.ignore_permissions = 1
 			ticket.insert().submit()
 
@@ -122,3 +155,12 @@ class EventBooking(Document):
 		except Exception:
 			frappe.log_error(frappe.get_traceback(), _("Booking Failed"))
 			frappe.throw(frappe._("Booking Failed! Please contact support."))
+
+	def on_cancel(self):
+		self.ignore_linked_doctypes = ["Ticket Cancellation Request"]
+		self.cancel_all_tickets()
+
+	def cancel_all_tickets(self):
+		tickets = frappe.db.get_all("Event Ticket", filters={"booking": self.name}, pluck="name")
+		for ticket in tickets:
+			frappe.get_cached_doc("Event Ticket", ticket).cancel()

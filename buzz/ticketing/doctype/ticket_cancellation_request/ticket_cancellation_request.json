@@ -7,7 +7,11 @@
  "field_order": [
   "booking",
   "cancel_full_booking",
-  "tickets"
+  "tickets",
+  "column_break_fiii",
+  "status",
+  "section_break_cykg",
+  "amended_from"
  ],
  "fields": [
   {
@@ -31,12 +35,40 @@
    "label": "Tickets",
    "mandatory_depends_on": "eval:doc.cancel_full_booking==0",
    "options": "Ticket Cancellation Item"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Ticket Cancellation Request",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_fiii",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "In Review",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "In Review\nAccepted\nRejected"
+  },
+  {
+   "fieldname": "section_break_cykg",
+   "fieldtype": "Section Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
+ "is_submittable": 1,
  "links": [],
- "modified": "2025-08-20 15:23:19.698185",
+ "modified": "2025-11-11 14:24:24.302960",
  "modified_by": "Administrator",
  "module": "Ticketing",
  "name": "Ticket Cancellation Request",
@@ -52,6 +84,21 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Event Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],

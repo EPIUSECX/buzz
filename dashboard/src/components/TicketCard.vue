@@ -1,12 +1,15 @@
 <template>
 	<li class="shadow-md p-4 rounded-lg bg-surface-white border border-outline-gray-2 relative">
-		<!-- Cancellation Status Badge -->
-		<div v-if="isCancelled" class="absolute top-2 left-2">
-			<span
-				class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-surface-red-1 text-ink-red-3"
-			>
-				Cancellation Requested
-			</span>
+		<!-- Status Badge -->
+		<div v-if="isCancelled || isCancellationRequested" class="absolute top-2 left-2">
+			<Badge v-if="isCancelled" variant="outline" theme="red" size="sm" label="Cancelled" />
+			<Badge
+				v-else-if="isCancellationRequested"
+				variant="subtle"
+				theme="orange"
+				size="sm"
+				label="Cancellation Requested"
+			/>
 		</div>
 
 		<!-- Three-dot dropdown menu -->
@@ -17,23 +20,33 @@
 		</div>
 
 		<div>
-			<h4 class="text-md font-semibold text-ink-gray-9" :class="{ 'mt-6': isCancelled }">
+			<h4
+				class="text-md font-semibold text-ink-gray-9"
+				:class="{ 'mt-6': isCancelled || isCancellationRequested }"
+			>
 				{{ ticket.attendee_name }}
 			</h4>
 			<p class="text-sm text-ink-gray-7">Email: {{ ticket.attendee_email }}</p>
-			<p class="text-sm text-ink-gray-7">Ticket Type: {{ ticket.ticket_type }}</p>
+			<p
+				v-if="!['Default', 'Normal'].includes(ticket.ticket_type)"
+				class="text-sm text-ink-gray-7"
+			>
+				Ticket Type: {{ ticket.ticket_type }}
+			</p>
 
 			<!-- Add-ons Section -->
 			<div v-if="ticket.add_ons && ticket.add_ons.length > 0" class="mt-3">
 				<h5 class="text-sm font-medium text-ink-gray-8 mb-2">Add-ons:</h5>
-				<div class="space-y-1">
+				<div class="space-y-3">
 					<div
 						v-for="addon in ticket.add_ons"
 						:key="addon.name"
-						class="flex justify-between items-center bg-surface-gray-1 px-2 py-1 rounded text-xs"
+						class="bg-surface-gray-1 px-3 py-2 rounded text-xs"
 					>
-						<span class="font-medium text-ink-gray-8">{{ addon.title }}:</span>
-						<span class="text-ink-gray-7">{{ addon.value }}</span>
+						<div class="font-medium text-ink-gray-8 mb-1">{{ addon.title }}</div>
+						<div v-if="addon.user_selects_option" class="text-ink-gray-7">
+							{{ addon.value }}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -61,7 +74,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
-import { Button, Dropdown } from "frappe-ui";
+import { Button, Dropdown, Badge } from "frappe-ui";
 import TicketTransferDialog from "./TicketTransferDialog.vue";
 import AddOnPreferenceDialog from "./AddOnPreferenceDialog.vue";
 import LucideUserPen from "~icons/lucide/user-pen";
@@ -77,6 +90,10 @@ const props = defineProps({
 		default: false,
 	},
 	canChangeAddOns: {
+		type: Boolean,
+		default: false,
+	},
+	isCancellationRequested: {
 		type: Boolean,
 		default: false,
 	},
@@ -101,8 +118,8 @@ const hasCustomizableAddOns = computed(() => {
 const ticketActions = computed(() => {
 	const actions = [];
 
-	// Don't show any actions if ticket is cancelled
-	if (props.isCancelled) {
+	// Don't show any actions if ticket is cancelled or has a pending cancellation request
+	if (props.isCancelled || props.isCancellationRequested) {
 		return actions;
 	}
 

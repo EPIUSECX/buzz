@@ -7,6 +7,18 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 				<!-- Left Side: Form Inputs -->
 				<div class="lg:col-span-2">
+					<!-- Booking-level Custom Fields -->
+					<div
+						v-if="bookingCustomFields.length > 0"
+						class="bg-surface-white border border-outline-gray-3 rounded-xl p-4 md:p-6 mb-6 shadow-sm"
+					>
+						<CustomFieldsSection
+							v-model="bookingCustomFieldsData"
+							:custom-fields="bookingCustomFields"
+							title="Booking Information"
+						/>
+					</div>
+
 					<AttendeeFormControl
 						v-for="(attendee, index) in attendees"
 						:key="attendee.id"
@@ -14,6 +26,7 @@
 						:index="index"
 						:available-ticket-types="availableTicketTypes"
 						:available-add-ons="availableAddOns"
+						:custom-fields="ticketCustomFields"
 						:show-remove="attendees.length > 1"
 						@remove="removeAttendee(index)"
 					/>
@@ -68,11 +81,12 @@
 </template>
 
 <script setup>
-import { computed, watch } from "vue";
+import { computed, watch, ref } from "vue";
 import AttendeeFormControl from "./AttendeeFormControl.vue";
 import BookingSummary from "./BookingSummary.vue";
 import EventDetailsHeader from "./EventDetailsHeader.vue";
-import { createResource } from "frappe-ui";
+import CustomFieldsSection from "./CustomFieldsSection.vue";
+import { createResource, toast } from "frappe-ui";
 import { useBookingFormStorage } from "../composables/useBookingFormStorage.js";
 import { useRouter } from "vue-router";
 import { userResource } from "../data/user.js";
@@ -99,11 +113,22 @@ const props = defineProps({
 		type: Object,
 		default: () => ({}),
 	},
+	customFields: {
+		type: Array,
+		default: () => [],
+	},
 });
 
 // --- STATE ---
 // Use the booking form storage composable
-const { attendees, attendeeIdCounter } = useBookingFormStorage();
+const {
+	attendees,
+	attendeeIdCounter,
+	bookingCustomFields: storedBookingCustomFields,
+} = useBookingFormStorage();
+
+// Use stored booking custom fields data
+const bookingCustomFieldsData = storedBookingCustomFields;
 
 // Ensure user data is loaded
 if (!userResource.data) {
@@ -119,6 +144,15 @@ const ticketTypesMap = computed(() =>
 );
 const eventId = computed(() => props.availableTicketTypes[0]?.event || null);
 
+// Separate custom fields by applied_to
+const bookingCustomFields = computed(() =>
+	props.customFields.filter((field) => field.applied_to === "Booking")
+);
+
+const ticketCustomFields = computed(() =>
+	props.customFields.filter((field) => field.applied_to === "Ticket")
+);
+
 // --- METHODS ---
 const createNewAttendee = () => {
 	attendeeIdCounter.value++;
@@ -132,6 +166,7 @@ const createNewAttendee = () => {
 				? props.availableTicketTypes[0]?.name
 				: props.availableTicketTypes[0]?.name || "",
 		add_ons: {},
+		custom_fields: {},
 	};
 	for (const addOn of props.availableAddOns) {
 		newAttendee.add_ons[addOn.name] = {
@@ -174,6 +209,9 @@ const summary = computed(() => {
 		for (const addOnName in attendee.add_ons) {
 			if (attendee.add_ons[addOnName].selected) {
 				const addOnInfo = addOnsMap.value[addOnName];
+				// Skip if add-on no longer exists (e.g., was disabled)
+				if (!addOnInfo) continue;
+
 				if (!summaryData.add_ons[addOnName]) {
 					summaryData.add_ons[addOnName] = {
 						count: 0,
@@ -292,9 +330,52 @@ const processBooking = createResource({
 	url: "buzz.api.process_booking",
 });
 
+// --- FORM VALIDATION ---
+const validateForm = () => {
+	const errors = [];
+
+	// Validate booking-level mandatory fields
+	for (const field of bookingCustomFields.value) {
+		if (field.mandatory) {
+			const value = bookingCustomFieldsData.value[field.fieldname];
+			if (!value || !String(value).trim()) {
+				errors.push(`${field.label} is required`);
+			}
+		}
+	}
+
+	// Validate ticket-level mandatory fields for each attendee
+	attendees.value.forEach((attendee, index) => {
+		for (const field of ticketCustomFields.value) {
+			if (field.mandatory) {
+				const value = attendee.custom_fields?.[field.fieldname];
+				if (!value || !String(value).trim()) {
+					errors.push(`${field.label} is required for Attendee #${index + 1}`);
+				}
+			}
+		}
+	});
+
+	return errors;
+};
+
 // --- FORM SUBMISSION ---
 async function submit() {
 	if (processBooking.loading) return;
+
+	// Validate mandatory fields
+	const validationErrors = validateForm();
+	if (validationErrors.length > 0) {
+		// Show the first error as toast, or all errors if only a few
+		if (validationErrors.length === 1) {
+			toast.error(validationErrors[0]);
+		} else if (validationErrors.length <= 3) {
+			toast.error(`Please fill in the required fields:\n${validationErrors.join("\n")}`);
+		} else {
+			toast.error(`Please fill in ${validationErrors.length} required fields.`);
+		}
+		return;
+	}
 
 	const attendees_payload = attendees.value.map((attendee) => {
 		const cleanAttendee = JSON.parse(JSON.stringify(attendee));
@@ -309,12 +390,47 @@ async function submit() {
 			}
 		}
 		cleanAttendee.add_ons = selected_add_ons;
+
+		// Clean custom fields - include all valid fields (mandatory fields are validated separately)
+		if (cleanAttendee.custom_fields) {
+			const cleanedCustomFields = {};
+			for (const [fieldName, value] of Object.entries(cleanAttendee.custom_fields)) {
+				// Check if this is a valid custom field for tickets
+				const fieldDef = ticketCustomFields.value.find((cf) => cf.fieldname === fieldName);
+				if (fieldDef) {
+					// Include mandatory fields even if empty (validation already passed)
+					// For non-mandatory fields, only include if they have values
+					if (fieldDef.mandatory || (value != null && String(value).trim())) {
+						cleanedCustomFields[fieldName] = value || "";
+					}
+				}
+			}
+			cleanAttendee.custom_fields =
+				Object.keys(cleanedCustomFields).length > 0 ? cleanedCustomFields : null;
+		}
+
 		return cleanAttendee;
 	});
+
+	// Clean booking custom fields
+	const cleanedBookingCustomFields = {};
+	for (const [fieldName, value] of Object.entries(bookingCustomFieldsData.value)) {
+		// Check if this is a valid custom field for bookings
+		const fieldDef = bookingCustomFields.value.find((cf) => cf.fieldname === fieldName);
+		if (fieldDef) {
+			// Include mandatory fields even if empty (validation already passed)
+			// For non-mandatory fields, only include if they have values
+			if (fieldDef.mandatory || (value != null && String(value).trim())) {
+				cleanedBookingCustomFields[fieldName] = value || "";
+			}
+		}
+	}
 
 	const final_payload = {
 		event: eventId.value,
 		attendees: attendees_payload,
+		booking_custom_fields:
+			Object.keys(cleanedBookingCustomFields).length > 0 ? cleanedBookingCustomFields : null,
 	};
 
 	processBooking.submit(final_payload, {

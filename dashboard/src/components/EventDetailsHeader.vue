@@ -11,12 +11,6 @@
 				:alt="eventDetails.title"
 				class="w-full h-full object-cover"
 			/>
-			<div class="absolute inset-0 bg-black bg-opacity-30"></div>
-			<div class="absolute bottom-4 left-4 text-white">
-				<h1 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
-					{{ eventDetails.title }}
-				</h1>
-			</div>
 		</div>
 
 		<!-- Event Info without banner -->

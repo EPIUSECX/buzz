@@ -10,6 +10,7 @@
 				:availableTicketTypes="eventBookingData.availableTicketTypes"
 				:gstSettings="eventBookingData.gstSettings"
 				:eventDetails="eventBookingData.eventDetails"
+				:customFields="eventBookingData.customFields"
 			/>
 		</div>
 	</div>
@@ -25,6 +26,7 @@ const eventBookingData = reactive({
 	availableTicketTypes: null,
 	gstSettings: null,
 	eventDetails: null,
+	customFields: null,
 });
 
 const props = defineProps({
@@ -48,12 +50,14 @@ const eventBookingResource = createResource({
 			gst_percentage: 18,
 		};
 		eventBookingData.eventDetails = data.event_details || {};
+		eventBookingData.customFields = data.custom_fields || [];
 	},
 	onError: (error) => {
 		if (error.message.includes("DoesNotExistError")) {
 			console.error("Event not found:", error);
 			// Optionally, redirect to a 404 page or show a message
 			alert("Event not found. Please check the event URL.");
+			window.location.href = "/dashboard";
 		} else {
 			console.error("Error loading event booking data:", error);
 		}

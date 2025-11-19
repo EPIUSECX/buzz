@@ -5,11 +5,11 @@
 
 			<!-- Request Cancellation Button -->
 			<Button
-				v-if="canRequestCancellation && !cancellationRequest"
+				v-if="showCancellationButton"
 				variant="subtle"
 				@click="$emit('request-cancellation')"
 			>
-				Request Cancellation
+				{{ cancellationRequest ? "Request More Cancellations" : "Request Cancellation" }}
 			</Button>
 		</div>
 
@@ -29,6 +29,7 @@
 				:ticket="ticket"
 				:can-transfer="canTransferTickets"
 				:can-change-add-ons="canChangeAddOns"
+				:is-cancellation-requested="isCancellationRequestedTicket(ticket.name)"
 				:is-cancelled="isCancelledTicket(ticket.name)"
 				@transfer-success="$emit('transfer-success')"
 			/>
@@ -37,6 +38,7 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import { Button } from "frappe-ui";
 import TicketCard from "./TicketCard.vue";
 import RestrictionNotices from "./RestrictionNotices.vue";
@@ -62,6 +64,10 @@ const props = defineProps({
 		type: Object,
 		default: null,
 	},
+	cancellationRequestedTickets: {
+		type: Array,
+		default: () => [],
+	},
 	cancelledTickets: {
 		type: Array,
 		default: () => [],
@@ -69,6 +75,29 @@ const props = defineProps({
 });
 
 defineEmits(["request-cancellation", "transfer-success"]);
+
+// Check if there are any tickets that can still be cancelled
+const hasTicketsAvailableForCancellation = computed(() => {
+	return props.tickets.some(
+		(ticket) =>
+			!props.cancelledTickets.includes(ticket.name) &&
+			!props.cancellationRequestedTickets.includes(ticket.name)
+	);
+});
+
+// Show cancellation button if:
+// 1. Cancellation is allowed
+// 2. Either there's no existing request OR there are still tickets available for cancellation
+const showCancellationButton = computed(() => {
+	return (
+		props.canRequestCancellation &&
+		(!props.cancellationRequest || hasTicketsAvailableForCancellation.value)
+	);
+});
+
+const isCancellationRequestedTicket = (ticketId) => {
+	return props.cancellationRequestedTickets?.includes(ticketId) || false;
+};
 
 const isCancelledTicket = (ticketId) => {
 	return props.cancelledTickets?.includes(ticketId) || false;
