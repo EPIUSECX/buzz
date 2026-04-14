@@ -65,7 +65,7 @@
 <script setup>
 import { session } from "@/data/session";
 import { Spinner, createResource } from "frappe-ui";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import BookingForm from "../components/BookingForm.vue";
 
 const eventBookingData = reactive({
@@ -121,4 +121,13 @@ const eventBookingResource = createResource({
 		}
 	},
 });
+
+watch(
+	() => session.isLoggedIn,
+	(isLoggedIn) => {
+		if (isLoggedIn) {
+			eventBookingResource.reload();
+		}
+	}
+);
 </script>
