@@ -84,7 +84,7 @@
   {
    "fieldname": "copy_to_clipboard",
    "fieldtype": "Button",
-   "label": "Copy to Clipboard"
+   "label": "Copy link to clipboard"
   }
  ],
  "grid_page_length": 50,
