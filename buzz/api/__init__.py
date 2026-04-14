@@ -242,15 +242,6 @@ def get_event_booking_data(event_route: str) -> dict:
 	else:
 		data.event_details = event_doc
 
-	if is_guest and not event_doc.allow_guest_booking:
-		data.available_ticket_types = []
-		data.available_add_ons = []
-		data.tax_settings = {}
-		data.custom_fields = []
-		data.payment_gateways = []
-		data.guest_booking_disabled = True
-		return data
-
 	available_ticket_types = []
 	published_ticket_types = frappe.db.get_all(
 		"Event Ticket Type", filters={"is_published": True, "event": event_doc.name}, pluck="name"
