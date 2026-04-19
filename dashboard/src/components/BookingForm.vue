@@ -217,7 +217,7 @@
 									v-model="couponCode"
 									:placeholder="__('Enter code')"
 									:aria-label="__('Coupon code')"
-									class="flex-1"
+									class="flex-1 uppercase"
 									@keyup.enter="applyCoupon"
 								/>
 								<Button
@@ -828,7 +828,7 @@ onMounted(async () => {
 	// Pre-fill and auto-apply coupon from ?coupon= query param
 	const initialCoupon = appliedCouponQuery.value;
 	if (typeof initialCoupon === "string" && initialCoupon.trim() && !couponApplied.value) {
-		couponCode.value = initialCoupon.trim();
+		couponCode.value = initialCoupon.trim().toUpperCase();
 		await applyCoupon();
 	}
 });
@@ -971,16 +971,20 @@ function sendOtpForVerification() {
 
 // --- COUPON FUNCTIONS ---
 async function applyCoupon() {
-	if (!couponCode.value.trim()) {
+	const normalizedCode = couponCode.value.trim().toUpperCase();
+	if (!normalizedCode) {
 		couponError.value = __("Please enter a coupon code");
 		return;
 	}
+
+	// Reflect normalized casing back into the input / applied card
+	couponCode.value = normalizedCode;
 
 	couponError.value = "";
 	let result;
 	try {
 		const params = {
-			coupon_code: couponCode.value.trim(),
+			coupon_code: normalizedCode,
 			event: eventId.value,
 		};
 		// Pass user email for guest mode to properly check per-user limits
@@ -1028,7 +1032,7 @@ async function applyCoupon() {
 			// Info panel shows details - no toast needed
 		}
 
-		appliedCouponQuery.value = couponCode.value.trim();
+		appliedCouponQuery.value = normalizedCode;
 	} else {
 		couponApplied.value = false;
 		couponData.value = null;
