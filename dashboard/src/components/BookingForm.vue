@@ -404,6 +404,7 @@ import { clearBookingCache } from "@/utils/index";
 import { FormControl, createResource, toast } from "frappe-ui";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useRouteQuery } from "@vueuse/router";
 import LucideAlertCircle from "~icons/lucide/alert-circle";
 import LucideCheck from "~icons/lucide/check";
 import LucideCheckCircle from "~icons/lucide/check-circle";
@@ -518,7 +519,8 @@ const activeOfflineCustomFields = computed(() => {
 	return selectedOfflineMethod.value.custom_fields || [];
 });
 
-// Coupon state
+// Coupon state — `appliedCouponQuery` keeps the URL in sync with the applied coupon
+const appliedCouponQuery = useRouteQuery("coupon", null);
 const couponCode = ref("");
 const couponApplied = ref(false);
 const couponError = ref("");
@@ -824,9 +826,9 @@ onMounted(async () => {
 	}
 
 	// Pre-fill and auto-apply coupon from ?coupon= query param
-	const couponFromQuery = route.query.coupon;
-	if (typeof couponFromQuery === "string" && couponFromQuery.trim() && !couponApplied.value) {
-		couponCode.value = couponFromQuery.trim();
+	const initialCoupon = appliedCouponQuery.value;
+	if (typeof initialCoupon === "string" && initialCoupon.trim() && !couponApplied.value) {
+		couponCode.value = initialCoupon.trim();
 		await applyCoupon();
 	}
 });
@@ -1026,7 +1028,7 @@ async function applyCoupon() {
 			// Info panel shows details - no toast needed
 		}
 
-		syncCouponToQuery(couponCode.value.trim());
+		appliedCouponQuery.value = couponCode.value.trim();
 	} else {
 		couponApplied.value = false;
 		couponData.value = null;
@@ -1039,21 +1041,7 @@ function removeCoupon() {
 	couponApplied.value = false;
 	couponData.value = null;
 	couponError.value = "";
-	syncCouponToQuery(null);
-}
-
-function syncCouponToQuery(value) {
-	const currentQuery = route.query;
-	const currentCoupon = typeof currentQuery.coupon === "string" ? currentQuery.coupon : undefined;
-	if ((value || undefined) === currentCoupon) return;
-
-	const nextQuery = { ...currentQuery };
-	if (value) {
-		nextQuery.coupon = value;
-	} else {
-		delete nextQuery.coupon;
-	}
-	router.replace({ query: nextQuery });
+	appliedCouponQuery.value = null;
 }
 
 // --- FORM VALIDATION ---
