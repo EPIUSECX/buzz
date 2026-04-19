@@ -822,6 +822,13 @@ onMounted(async () => {
 
 		attendees.value = [newAttendee];
 	}
+
+	// Pre-fill and auto-apply coupon from ?coupon= query param
+	const couponFromQuery = route.query.coupon;
+	if (typeof couponFromQuery === "string" && couponFromQuery.trim() && !couponApplied.value) {
+		couponCode.value = couponFromQuery.trim();
+		await applyCoupon();
+	}
 });
 
 // Ensure existing attendees have proper add-on structure when availableAddOns changes
@@ -1018,6 +1025,8 @@ async function applyCoupon() {
 			};
 			// Info panel shows details - no toast needed
 		}
+
+		syncCouponToQuery(couponCode.value.trim());
 	} else {
 		couponApplied.value = false;
 		couponData.value = null;
@@ -1030,6 +1039,21 @@ function removeCoupon() {
 	couponApplied.value = false;
 	couponData.value = null;
 	couponError.value = "";
+	syncCouponToQuery(null);
+}
+
+function syncCouponToQuery(value) {
+	const currentQuery = route.query;
+	const currentCoupon = typeof currentQuery.coupon === "string" ? currentQuery.coupon : undefined;
+	if ((value || undefined) === currentCoupon) return;
+
+	const nextQuery = { ...currentQuery };
+	if (value) {
+		nextQuery.coupon = value;
+	} else {
+		delete nextQuery.coupon;
+	}
+	router.replace({ query: nextQuery });
 }
 
 // --- FORM VALIDATION ---
