@@ -171,41 +171,12 @@
 						/>
 					</div>
 
-					<div
+					<BillingDetail
 						v-if="shouldApplyTax"
-						class="bg-surface-white border border-outline-gray-3 rounded-xl p-4 md:p-6 mb-6 shadow-sm"
-					>
-						<h3 class="text-base font-medium text-ink-gray-8 border-b pb-2 mb-4">
-							{{ __("Billing Details") }}
-						</h3>
-						<div class="flex flex-col gap-4">
-							<FormControl
-								type="checkbox"
-								v-model="requestInvoice"
-								:label="__('Do you want an invoice?')"
-							/>
-							<template v-if="requestInvoice">
-								<FormControl
-									v-model="gstIn"
-									type="text"
-									:label="__('GST IN')"
-									:placeholder="__('Enter GST IN')"
-								/>
-								<div class="space-y-1.5">
-									<label class="text-xs text-ink-gray-5 block">
-										{{ __("Billing Address") }}
-										<span class="text-ink-red-4">*</span>
-									</label>
-									<Textarea
-										v-model="billingAddress"
-										:placeholder="__('Enter billing address')"
-										:required="true"
-										variant="outline"
-									/>
-								</div>
-							</template>
-						</div>
-					</div>
+						v-model:request-invoice="requestInvoice"
+						v-model:gst-in="gstIn"
+						v-model:billing-address="billingAddress"
+					/>
 
 					<AttendeeFormControl
 						v-for="(attendee, index) in attendees"
@@ -437,7 +408,8 @@ import { useLoginDialog } from "@/composables/useLoginDialog";
 import { userResource } from "@/data/user";
 import { formatCurrency, formatPriceOrFree } from "@/utils/currency";
 import { clearBookingCache } from "@/utils/index";
-import { FormControl, Textarea, createResource, toast } from "frappe-ui";
+import BillingDetail from "@/components/BillingDetail.vue";
+import { FormControl, createResource, toast } from "frappe-ui";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useRouteQuery } from "@vueuse/router";
