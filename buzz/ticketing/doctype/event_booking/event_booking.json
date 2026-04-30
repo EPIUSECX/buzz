@@ -34,7 +34,7 @@
   "discount_amount",
   "billing_details_section",
   "request_invoice",
-  "gst_in",
+  "tax_id",
   "column_break_billing",
   "billing_address",
   "section_break_sdfp",
@@ -194,9 +194,9 @@
   },
   {
    "depends_on": "eval:doc.request_invoice==1",
-   "fieldname": "gst_in",
+   "fieldname": "tax_id",
    "fieldtype": "Data",
-   "label": "GST IN"
+   "label": "Tax ID"
   },
   {
    "fieldname": "column_break_billing",

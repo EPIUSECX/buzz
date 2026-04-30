@@ -14,11 +14,11 @@
 			/>
 			<template v-if="requestInvoice">
 				<FormControl
-					:model-value="gstIn"
-					@update:model-value="$emit('update:gstIn', $event)"
+					:model-value="taxId"
+					@update:model-value="$emit('update:taxId', $event)"
 					type="text"
-					:label="__('GST IN')"
-					:placeholder="__('Enter GST IN')"
+					:label="taxIdLabel"
+					:placeholder="__('Enter {0}', [taxIdLabel])"
 				/>
 				<div class="space-y-1.5">
 					<label class="text-xs text-ink-gray-5 block">
@@ -39,14 +39,15 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import { FormControl, Textarea } from "frappe-ui";
 
-defineProps({
+const props = defineProps({
 	requestInvoice: {
 		type: Boolean,
 		default: false,
 	},
-	gstIn: {
+	taxId: {
 		type: String,
 		default: "",
 	},
@@ -54,7 +55,13 @@ defineProps({
 		type: String,
 		default: "",
 	},
+	taxLabel: {
+		type: String,
+		default: "Tax",
+	},
 });
 
-defineEmits(["update:requestInvoice", "update:gstIn", "update:billingAddress"]);
+defineEmits(["update:requestInvoice", "update:taxId", "update:billingAddress"]);
+
+const taxIdLabel = computed(() => __("{0} ID", [props.taxLabel]));
 </script>

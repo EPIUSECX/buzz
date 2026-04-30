@@ -174,8 +174,9 @@
 					<BillingDetail
 						v-if="shouldApplyTax"
 						v-model:request-invoice="requestInvoice"
-						v-model:gst-in="gstIn"
+						v-model:tax-id="taxId"
 						v-model:billing-address="billingAddress"
+						:tax-label="taxLabel"
 					/>
 
 					<AttendeeFormControl
@@ -497,7 +498,7 @@ const {
 	guestEmail,
 	guestPhone,
 	requestInvoice,
-	gstIn,
+	taxId,
 	billingAddress,
 } = useBookingFormStorage(props.eventRoute);
 
@@ -1184,7 +1185,7 @@ async function submit() {
 		guest_full_name: props.isGuestMode ? guestFullName.value.trim() : null,
 		guest_phone: props.isGuestMode && isPhoneOtp.value ? guestPhone.value.trim() : null,
 		request_invoice: includeInvoice,
-		gst_in: includeInvoice ? gstIn.value?.trim() : null,
+		tax_id: includeInvoice ? taxId.value?.trim() : null,
 		billing_address: includeInvoice ? billingAddress.value?.trim() : null,
 	};
 
