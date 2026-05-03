@@ -26,7 +26,7 @@ export function useBookingFormStorage(eventRoute: string) {
 	const guestEmail = useStorage(`${storageKeyPrefix}-guest-email`, "")
 	const guestPhone = useStorage(`${storageKeyPrefix}-guest-phone`, "")
 
-	const requestInvoice = useStorage(`${storageKeyPrefix}-request-invoice`, false)
+	const invoiceRequested = useStorage(`${storageKeyPrefix}-invoice-requested`, false)
 	const taxId = useStorage(`${storageKeyPrefix}-tax-id`, "")
 	const billingAddress = useStorage(`${storageKeyPrefix}-billing-address`, "")
 
@@ -42,7 +42,7 @@ export function useBookingFormStorage(eventRoute: string) {
 		guestLastName.value = ""
 		guestEmail.value = ""
 		guestPhone.value = ""
-		requestInvoice.value = false
+		invoiceRequested.value = false
 		taxId.value = ""
 		billingAddress.value = ""
 	}
@@ -65,7 +65,7 @@ export function useBookingFormStorage(eventRoute: string) {
 		guestLastName,
 		guestEmail,
 		guestPhone,
-		requestInvoice,
+		invoiceRequested,
 		taxId,
 		billingAddress,
 		clearStoredData,

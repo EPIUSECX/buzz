@@ -8,11 +8,11 @@
 		<div class="flex flex-col gap-4">
 			<FormControl
 				type="checkbox"
-				:model-value="requestInvoice"
-				@update:model-value="$emit('update:requestInvoice', $event)"
-				:label="__('Do you want an invoice?')"
+				:model-value="invoiceRequested"
+				@update:model-value="$emit('update:invoiceRequested', $event)"
+				:label="__('Do you need an invoice?')"
 			/>
-			<template v-if="requestInvoice">
+			<template v-if="invoiceRequested">
 				<FormControl
 					:model-value="taxId"
 					@update:model-value="$emit('update:taxId', $event)"
@@ -43,7 +43,7 @@ import { computed } from "vue";
 import { FormControl, Textarea } from "frappe-ui";
 
 const props = defineProps({
-	requestInvoice: {
+	invoiceRequested: {
 		type: Boolean,
 		default: false,
 	},
@@ -61,7 +61,7 @@ const props = defineProps({
 	},
 });
 
-defineEmits(["update:requestInvoice", "update:taxId", "update:billingAddress"]);
+defineEmits(["update:invoiceRequested", "update:taxId", "update:billingAddress"]);
 
-const taxIdLabel = computed(() => __("{0} ID", [props.taxLabel]));
+const taxIdLabel = computed(() => __(props.taxLabel));
 </script>
