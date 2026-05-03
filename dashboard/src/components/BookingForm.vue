@@ -171,6 +171,14 @@
 						/>
 					</div>
 
+					<BillingDetails
+						v-if="shouldApplyTax"
+						v-model:invoice-requested="invoiceRequested"
+						v-model:tax-id="taxId"
+						v-model:billing-address="billingAddress"
+						:tax-label="taxLabel"
+					/>
+
 					<AttendeeFormControl
 						v-for="(attendee, index) in attendees"
 						:key="attendee.id"
@@ -401,6 +409,7 @@ import { useLoginDialog } from "@/composables/useLoginDialog";
 import { userResource } from "@/data/user";
 import { formatCurrency, formatPriceOrFree } from "@/utils/currency";
 import { clearBookingCache } from "@/utils/index";
+import BillingDetails from "@/components/BillingDetails.vue";
 import { FormControl, createResource, toast } from "frappe-ui";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -488,6 +497,9 @@ const {
 	guestLastName,
 	guestEmail,
 	guestPhone,
+	invoiceRequested,
+	taxId,
+	billingAddress,
 } = useBookingFormStorage(props.eventRoute);
 
 const guestFullName = computed(() => `${guestFirstName.value} ${guestLastName.value}`.trim());
@@ -1170,6 +1182,9 @@ async function submit() {
 		guest_email: props.isGuestMode ? guestEmail.value.trim() : null,
 		guest_full_name: props.isGuestMode ? guestFullName.value.trim() : null,
 		guest_phone: props.isGuestMode && isPhoneOtp.value ? guestPhone.value.trim() : null,
+		invoice_requested: invoiceRequested.value,
+		tax_id: invoiceRequested.value ? taxId.value?.trim() : null,
+		billing_address: invoiceRequested.value ? billingAddress.value?.trim() : null,
 	};
 
 	if (props.isGuestMode) {
