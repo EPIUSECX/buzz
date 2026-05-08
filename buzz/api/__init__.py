@@ -432,8 +432,6 @@ def process_booking(
 	)
 	phone_map = {cf["fieldname"]: cf["label"] for cf in phone_fields}
 
-	if booking_custom_fields:
-		validate_custom_fields(booking_custom_fields, phone_map)
 	if event_doc.category == "Webinars":
 		for attendee in attendees:
 			if not (attendee.get("last_name") or "").strip():
