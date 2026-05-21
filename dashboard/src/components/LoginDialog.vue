@@ -237,7 +237,7 @@ import { userResource } from "@/data/user";
 import { Button, Dialog, FormControl, createResource } from "frappe-ui";
 import { computed, defineComponent, h, ref, watch } from "vue";
 
-const { is_open, close, on_success_callback } = useLoginDialog();
+const { is_open, close } = useLoginDialog();
 
 const current_view = ref("login");
 const error_message = ref("");
@@ -330,9 +330,6 @@ function handleLogin() {
 				session.user =
 					session.login.data?.user || document.cookie.match(/user_id=([^;]+)/)?.[1];
 				close();
-				if (on_success_callback.value) {
-					on_success_callback.value();
-				}
 			},
 			onError(error) {
 				error_message.value = error.messages?.[0] || __("Invalid email or password.");
