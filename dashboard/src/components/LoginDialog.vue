@@ -94,7 +94,7 @@
 					{{ __("Don't have an account?") }}
 					<button
 						type="button"
-						class="font-medium text-ink-gray-7 hover:text-ink-gray-9"
+						class="font-semibold text-ink-gray-9 hover:text-ink-gray-8"
 						@click="switchView('signup')"
 					>
 						{{ __("Sign up") }}
