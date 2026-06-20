@@ -14,8 +14,6 @@ EVENT_PROPOSAL_EXCLUDE_FIELDS = DEFAULT_FIELDS | {
 	"naming_series",
 	"amended_from",
 	"host",
-	"host_company",
-	"host_company_logo",
 	"additional_notes",
 	"status",
 	"submitted_by",
