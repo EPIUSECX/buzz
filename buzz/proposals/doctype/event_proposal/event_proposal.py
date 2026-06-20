@@ -18,11 +18,13 @@ class EventProposal(Document):
 		from frappe.types import DF
 
 		about: DF.TextEditor
+		about_the_company: DF.SmallText | None
 		additional_notes: DF.SmallText | None
 		amended_from: DF.Link | None
 		category: DF.Link
 		end_date: DF.Date | None
 		end_time: DF.Time | None
+		event_banner: DF.AttachImage | None
 		free_webinar: DF.Check
 		host: DF.Link | None
 		host_company: DF.Data | None
