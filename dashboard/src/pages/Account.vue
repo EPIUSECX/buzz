@@ -39,8 +39,6 @@ import LucideTicket from "~icons/lucide/ticket";
 const route = useRoute();
 const router = useRouter();
 
-// Opt-in tabs (Proposals, Sponsorships) appear only when the user has activity there.
-// Own cacheKeys (not the list pages') so this lighter field/transform shape can't clobber theirs.
 const proposals = useList({
 	doctype: "Talk Proposal",
 	fields: ["name"],
@@ -110,8 +108,6 @@ const getTabIndexFromRoute = () => {
 
 const tabIndex = ref(getTabIndexFromRoute());
 
-// Keep URL, active tab and view in sync. If the route points at an opt-in tab the user
-// no longer has (e.g. a stale deep link), send them to the first tab once data has settled.
 watch(
 	[
 		() => route.path,
