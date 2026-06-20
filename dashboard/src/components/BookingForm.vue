@@ -841,7 +841,9 @@ onMounted(async () => {
 	const initialCoupon = appliedCouponQuery.value;
 	if (typeof initialCoupon === "string" && initialCoupon.trim() && !couponApplied.value) {
 		couponCode.value = initialCoupon.trim().toUpperCase();
-		await applyCoupon();
+		if (!requiresLogin.value) {
+			await applyCoupon();
+		}
 	}
 });
 
@@ -983,6 +985,11 @@ function sendOtpForVerification() {
 
 // --- COUPON FUNCTIONS ---
 async function applyCoupon() {
+	if (requiresLogin.value) {
+		openLoginDialog();
+		return;
+	}
+
 	const normalizedCode = couponCode.value.trim().toUpperCase();
 	if (!normalizedCode) {
 		couponError.value = __("Please enter a coupon code");
