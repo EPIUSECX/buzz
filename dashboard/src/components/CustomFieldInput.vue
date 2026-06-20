@@ -105,10 +105,17 @@
 			{{ __(field.label) }}
 			<span v-if="field.mandatory" class="text-ink-red-4">*</span>
 		</label>
-		<div v-if="modelValue" class="flex items-center gap-2">
+		<div v-if="modelValue" class="relative inline-block">
 			<img :src="modelValue" class="h-16 w-16 rounded object-cover border" />
-			<Button variant="ghost" size="sm" @click="$emit('update:modelValue', '')">
-				{{ __("Remove") }}
+			<Button
+				variant="solid"
+				theme="gray"
+				:title="__('Remove image')"
+				:aria-label="__('Remove image')"
+				class="absolute -top-2 -right-2 !rounded-full !p-1 !min-w-0"
+				@click="$emit('update:modelValue', '')"
+			>
+				<LucideX class="w-3 h-3" />
 			</Button>
 		</div>
 		<FileUploader
@@ -183,6 +190,7 @@ import {
 	Textarea,
 } from "frappe-ui";
 import { computed } from "vue";
+import LucideX from "~icons/lucide/x";
 
 const props = defineProps({
 	field: {
