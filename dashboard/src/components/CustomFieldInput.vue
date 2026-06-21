@@ -112,7 +112,7 @@
 				theme="gray"
 				:label="__('Remove image')"
 				:title="__('Remove image')"
-				class="absolute -right-1.5 -top-1.5 !min-w-0 !rounded-full !p-1"
+				class="absolute -right-1.5 -top-1.5 !h-5 !w-5 !min-w-0 !rounded-full !p-0"
 				@click="$emit('update:modelValue', '')"
 			>
 				<LucideX class="h-3 w-3" />
