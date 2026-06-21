@@ -108,13 +108,14 @@
 		<div v-if="modelValue" class="relative inline-block">
 			<img :src="modelValue" class="h-16 w-16 rounded object-cover border" />
 			<Button
-				variant="ghost"
+				variant="subtle"
+				theme="gray"
+				:label="__('Remove image')"
 				:title="__('Remove image')"
-				:aria-label="__('Remove image')"
-				class="absolute top-1 right-1 !min-w-0 !p-0.5 rounded-full bg-black/50 hover:bg-black/70"
+				class="absolute -right-1.5 -top-1.5 !min-w-0 !rounded-full !p-1"
 				@click="$emit('update:modelValue', '')"
 			>
-				<LucideX class="w-3.5 h-3.5 text-red-500" />
+				<LucideX class="h-3 w-3" />
 			</Button>
 		</div>
 		<FileUploader
