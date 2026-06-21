@@ -26,6 +26,7 @@ declare module 'vue' {
     EventDetailsHeader: typeof import('./src/components/EventDetailsHeader.vue')['default']
     EventSelector: typeof import('./src/components/EventSelector.vue')['default']
     EventSponsorForm: typeof import('./src/components/EventSponsorForm.vue')['default']
+    FormFieldSections: typeof import('./src/components/FormFieldSections.vue')['default']
     LanguageSwitcher: typeof import('./src/components/LanguageSwitcher.vue')['default']
     LoginDialog: typeof import('./src/components/LoginDialog.vue')['default']
     LoginRequired: typeof import('./src/components/LoginRequired.vue')['default']
