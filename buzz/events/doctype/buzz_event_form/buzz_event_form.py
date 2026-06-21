@@ -24,6 +24,7 @@ class BuzzEventForm(Document):
 		route: DF.Data
 		success_message: DF.MarkdownEditor | None
 		success_title: DF.Data | None
+		visible_fields: DF.SmallText | None
 	# end: auto-generated types
 
 	def validate(self):
