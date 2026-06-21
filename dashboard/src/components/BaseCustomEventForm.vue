@@ -49,51 +49,73 @@
 					{{ formData.form_title }}
 				</h1>
 
-				<div class="space-y-4">
-					<template v-for="field in formData.form_fields" :key="field.fieldname">
-						<div v-if="field.fieldtype === 'Table'" class="space-y-2">
-							<label class="text-xs text-ink-gray-5 block">
-								{{ __(field.label) }}
-							</label>
-							<div v-if="tableData[field.fieldname]?.length" class="space-y-2">
-								<div
-									v-for="(row, idx) in tableData[field.fieldname]"
-									:key="idx"
-									class="flex items-center justify-between border rounded-md px-3 py-2"
-								>
-									<span class="text-sm text-ink-gray-7">
-										{{ getTableRowSummary(row) }}
-									</span>
-									<div class="flex gap-1">
-										<Button
-											variant="ghost"
-											size="sm"
-											@click="editTableRow(field, idx)"
+				<div class="space-y-6">
+					<div
+						v-for="(section, section_index) in field_sections"
+						:key="section_index"
+						class="grid gap-4 grid-cols-1 sm:[grid-template-columns:var(--section-columns)]"
+						:style="{
+							'--section-columns': `repeat(${section.length}, minmax(0, 1fr))`,
+						}"
+					>
+						<div
+							v-for="(column, column_index) in section"
+							:key="column_index"
+							class="space-y-4"
+						>
+							<template v-for="field in column" :key="field.fieldname">
+								<div v-if="field.fieldtype === 'Table'" class="space-y-2">
+									<label class="text-xs text-ink-gray-5 block">
+										{{ __(field.label) }}
+									</label>
+									<div
+										v-if="tableData[field.fieldname]?.length"
+										class="space-y-2"
+									>
+										<div
+											v-for="(row, idx) in tableData[field.fieldname]"
+											:key="idx"
+											class="flex items-center justify-between border rounded-md px-3 py-2"
 										>
-											{{ __("Edit") }}
-										</Button>
-										<Button
-											variant="ghost"
-											size="sm"
-											@click="removeTableRow(field.fieldname, idx)"
-										>
-											{{ __("Remove") }}
-										</Button>
+											<span class="text-sm text-ink-gray-7">
+												{{ getTableRowSummary(row) }}
+											</span>
+											<div class="flex gap-1">
+												<Button
+													variant="ghost"
+													size="sm"
+													@click="editTableRow(field, idx)"
+												>
+													{{ __("Edit") }}
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													@click="removeTableRow(field.fieldname, idx)"
+												>
+													{{ __("Remove") }}
+												</Button>
+											</div>
+										</div>
 									</div>
+									<Button
+										variant="outline"
+										size="sm"
+										@click="addTableRow(field)"
+									>
+										{{ __("Add {0}", [__(field.label)]) }}
+									</Button>
 								</div>
-							</div>
-							<Button variant="outline" size="sm" @click="addTableRow(field)">
-								{{ __("Add {0}", [__(field.label)]) }}
-							</Button>
-						</div>
 
-						<CustomFieldInput
-							v-else
-							:field="normalizeField(field)"
-							:model-value="formValues[field.fieldname]"
-							@update:model-value="formValues[field.fieldname] = $event"
-						/>
-					</template>
+								<CustomFieldInput
+									v-else
+									:field="normalizeField(field)"
+									:model-value="formValues[field.fieldname]"
+									@update:model-value="formValues[field.fieldname] = $event"
+								/>
+							</template>
+						</div>
+					</div>
 
 					<CustomFieldsSection
 						v-if="formData.custom_fields?.length"
@@ -196,6 +218,30 @@ const renderedSuccessMessage = computed(() => {
 	const msg = formData.value?.success_message;
 	if (!msg) return "";
 	return marked(msg);
+});
+
+const field_sections = computed(() => {
+	const fields = formData.value?.form_fields || [];
+	const sections = [];
+	let current_section = [[]];
+	for (const field of fields) {
+		if (field.fieldtype === "Section Break") {
+			if (current_section.some((col) => col.length)) {
+				sections.push(current_section);
+			}
+			current_section = [[]];
+			continue;
+		}
+		if (field.fieldtype === "Column Break") {
+			current_section.push([]);
+			continue;
+		}
+		current_section[current_section.length - 1].push(field);
+	}
+	if (current_section.some((col) => col.length)) {
+		sections.push(current_section);
+	}
+	return sections;
 });
 
 function normalizeField(field) {

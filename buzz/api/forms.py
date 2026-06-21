@@ -190,7 +190,7 @@ def get_custom_form_data(event_route: str, form_route: str) -> dict:
 
 	auto_set = get_auto_set_fields(form_doctype)
 	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys())
-	form_fields = get_form_fields(form_doctype, exclude_fields)
+	form_fields = get_form_fields(form_doctype, exclude_fields, with_layout_breaks=True)
 
 	form_doctype_meta = frappe.get_meta(form_doctype)
 	custom_fields = []
