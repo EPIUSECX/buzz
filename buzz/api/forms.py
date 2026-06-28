@@ -62,7 +62,6 @@ def get_form_fields(
 	doctype: str,
 	exclude_fields: set,
 	with_layout_breaks: bool = False,
-	include_fields: set | None = None,
 ) -> list:
 	meta = frappe.get_meta(doctype)
 	fields = []
@@ -80,8 +79,6 @@ def get_form_fields(
 						"label": df.label or "",
 					}
 				)
-			continue
-		if include_fields is not None and df.fieldname not in include_fields:
 			continue
 		default_value = df.default
 		if default_value:
@@ -163,7 +160,7 @@ def get_auto_set_fields(form_doctype: str):
 	return auto_set
 
 
-def parse_visible_fields(value: str | None) -> set | None:
+def parse_excluded_fields(value: str | None) -> set | None:
 	if not value:
 		return None
 	fieldnames = {fieldname.strip() for fieldname in value.split(",") if fieldname.strip()}
@@ -175,29 +172,33 @@ def get_renderable_fields(form_doctype: str, exclude_fields: set) -> dict:
 	return {df.fieldname: df for df in meta.fields if is_renderable_form_field(df, exclude_fields)}
 
 
-def validate_visible_fields(form_doctype: str, visible_fields: str | None) -> None:
-	include_fields = parse_visible_fields(visible_fields)
-	if not include_fields:
+def validate_excluded_fields(form_doctype: str, excluded_fields: str | None) -> None:
+	excluded = parse_excluded_fields(excluded_fields)
+	if not excluded:
 		return
 
-	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(get_auto_set_fields(form_doctype).keys())
-	renderable = get_renderable_fields(form_doctype, exclude_fields)
+	meta = frappe.get_meta(form_doctype)
+	system_exclude = STANDARD_EXCLUDE_FIELDS | set(get_auto_set_fields(form_doctype).keys())
+	# Blacklisting a system/auto-set field is a harmless no-op (it is never rendered anyway),
+	# so they count as known names; only genuine typos are rejected.
+	known_fieldnames = {df.fieldname for df in meta.fields} | system_exclude
 
-	unknown = include_fields - set(renderable)
+	unknown = excluded - known_fieldnames
 	if unknown:
 		frappe.throw(
-			_("These fields cannot be shown on the {0} form: {1}").format(
+			_("These fields do not exist on the {0} form: {1}").format(
 				form_doctype, ", ".join(sorted(unknown))
 			)
 		)
 
-	missing_mandatory = {
-		fieldname for fieldname, df in renderable.items() if df.reqd and fieldname not in include_fields
+	renderable = get_renderable_fields(form_doctype, system_exclude)
+	hidden_mandatory = {
+		fieldname for fieldname in excluded if fieldname in renderable and renderable[fieldname].reqd
 	}
-	if missing_mandatory:
+	if hidden_mandatory:
 		frappe.throw(
-			_("Visible Fields for the {0} form must include the mandatory fields: {1}").format(
-				form_doctype, ", ".join(sorted(missing_mandatory))
+			_("These mandatory fields cannot be hidden on the {0} form: {1}").format(
+				form_doctype, ", ".join(sorted(hidden_mandatory))
 			)
 		)
 
@@ -243,9 +244,9 @@ def get_custom_form_data(event_route: str, form_route: str) -> dict:
 		}
 
 	auto_set = get_auto_set_fields(form_doctype)
-	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys())
-	include_fields = parse_visible_fields(form_row.visible_fields)
-	form_fields = get_form_fields(form_doctype, exclude_fields, include_fields=include_fields)
+	excluded_fields = parse_excluded_fields(form_row.excluded_fields) or set()
+	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys()) | excluded_fields
+	form_fields = get_form_fields(form_doctype, exclude_fields)
 
 	form_doctype_meta = frappe.get_meta(form_doctype)
 	custom_fields = []
@@ -301,8 +302,8 @@ def submit_custom_form(
 	custom_fields_data = frappe.parse_json(custom_fields_data) or {}
 
 	auto_set = get_auto_set_fields(form_doctype)
-	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys())
-	include_fields = parse_visible_fields(form_row.visible_fields)
+	excluded_fields = parse_excluded_fields(form_row.excluded_fields) or set()
+	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys()) | excluded_fields
 
 	doc_data = {"doctype": form_doctype}
 
@@ -313,8 +314,6 @@ def submit_custom_form(
 			doc_data[field] = frappe.session.user
 
 	allowed_fieldnames = set(get_renderable_fields(form_doctype, exclude_fields))
-	if include_fields is not None:
-		allowed_fieldnames &= include_fields
 	for fieldname, value in data.items():
 		if fieldname in allowed_fieldnames:
 			doc_data[fieldname] = value

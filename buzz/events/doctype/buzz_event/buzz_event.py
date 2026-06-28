@@ -7,7 +7,7 @@ from frappe.model.document import Document
 from frappe.model.naming import append_number_if_name_exists
 from frappe.utils.data import get_time, time_diff_in_seconds
 
-from buzz.api.forms import validate_visible_fields
+from buzz.api.forms import validate_excluded_fields
 from buzz.utils import only_if_app_installed
 
 
@@ -84,8 +84,8 @@ class BuzzEvent(Document):
 
 	def validate_custom_forms(self):
 		for form in self.custom_forms:
-			if form.visible_fields:
-				validate_visible_fields(form.form_doctype, form.visible_fields)
+			if form.excluded_fields:
+				validate_excluded_fields(form.form_doctype, form.excluded_fields)
 
 	def validate_schedule(self):
 		end_date = self.end_date or self.start_date

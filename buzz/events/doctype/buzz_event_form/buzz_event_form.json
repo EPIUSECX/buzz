@@ -13,7 +13,7 @@
   "login_required",
   "column_break_main",
   "auto_close_at",
-  "visible_fields",
+  "excluded_fields",
   "section_break_success",
   "success_title",
   "success_message",
@@ -61,10 +61,10 @@
    "label": "Auto Close At"
   },
   {
-   "description": "Comma-separated field names. If set, only these fields are shown on the form (others hidden). Leave empty to show all. Mandatory fields must be included.",
-   "fieldname": "visible_fields",
+   "description": "Comma-separated field names to hide from the form (others are shown). Leave empty to show all. Mandatory fields cannot be hidden.",
+   "fieldname": "excluded_fields",
    "fieldtype": "Small Text",
-   "label": "Visible Fields"
+   "label": "Excluded Fields"
   },
   {
    "fieldname": "section_break_success",
