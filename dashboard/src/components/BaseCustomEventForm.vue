@@ -49,51 +49,53 @@
 					{{ formData.form_title }}
 				</h1>
 
-				<div class="space-y-4">
-					<template v-for="field in formData.form_fields" :key="field.fieldname">
-						<div v-if="field.fieldtype === 'Table'" class="space-y-2">
-							<label class="text-xs text-ink-gray-5 block">
-								{{ __(field.label) }}
-							</label>
-							<div v-if="tableData[field.fieldname]?.length" class="space-y-2">
-								<div
-									v-for="(row, idx) in tableData[field.fieldname]"
-									:key="idx"
-									class="flex items-center justify-between border rounded-md px-3 py-2"
-								>
-									<span class="text-sm text-ink-gray-7">
-										{{ getTableRowSummary(row) }}
-									</span>
-									<div class="flex gap-1">
-										<Button
-											variant="ghost"
-											size="sm"
-											@click="editTableRow(field, idx)"
-										>
-											{{ __("Edit") }}
-										</Button>
-										<Button
-											variant="ghost"
-											size="sm"
-											@click="removeTableRow(field.fieldname, idx)"
-										>
-											{{ __("Remove") }}
-										</Button>
+				<div class="space-y-6">
+					<FormFieldSections :fields="formData.form_fields">
+						<template #field="{ field }">
+							<div v-if="field.fieldtype === 'Table'" class="space-y-2">
+								<label class="text-xs text-ink-gray-5 block">
+									{{ __(field.label) }}
+								</label>
+								<div v-if="tableData[field.fieldname]?.length" class="space-y-2">
+									<div
+										v-for="(row, idx) in tableData[field.fieldname]"
+										:key="idx"
+										class="flex items-center justify-between gap-2 border border-outline-gray-2 rounded-md px-3 py-2"
+									>
+										<span class="text-sm text-ink-gray-7 min-w-0 truncate">
+											{{ getTableRowSummary(row) }}
+										</span>
+										<div class="flex gap-1 shrink-0">
+											<Button
+												variant="ghost"
+												size="sm"
+												@click="editTableRow(field, idx)"
+											>
+												{{ __("Edit") }}
+											</Button>
+											<Button
+												variant="ghost"
+												size="sm"
+												@click="removeTableRow(field.fieldname, idx)"
+											>
+												{{ __("Remove") }}
+											</Button>
+										</div>
 									</div>
 								</div>
+								<Button variant="outline" size="sm" @click="addTableRow(field)">
+									{{ __("Add {0}", [__(field.label)]) }}
+								</Button>
 							</div>
-							<Button variant="outline" size="sm" @click="addTableRow(field)">
-								{{ __("Add {0}", [__(field.label)]) }}
-							</Button>
-						</div>
 
-						<CustomFieldInput
-							v-else
-							:field="normalizeField(field)"
-							:model-value="formValues[field.fieldname]"
-							@update:model-value="formValues[field.fieldname] = $event"
-						/>
-					</template>
+							<CustomFieldInput
+								v-else
+								:field="normalizeField(field)"
+								:model-value="formValues[field.fieldname]"
+								@update:model-value="formValues[field.fieldname] = $event"
+							/>
+						</template>
+					</FormFieldSections>
 
 					<CustomFieldsSection
 						v-if="formData.custom_fields?.length"
@@ -157,6 +159,7 @@
 import CustomFieldInput from "@/components/CustomFieldInput.vue";
 import CustomFieldsSection from "@/components/CustomFieldsSection.vue";
 import EventDetailsHeader from "@/components/EventDetailsHeader.vue";
+import FormFieldSections from "@/components/FormFieldSections.vue";
 import LoginRequired from "@/components/LoginRequired.vue";
 import { Button, Dialog, Spinner, createResource, toast } from "frappe-ui";
 import { marked } from "marked";
