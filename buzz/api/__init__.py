@@ -1166,10 +1166,6 @@ def has_app_permission():
 
 @frappe.whitelist(allow_guest=True)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 def validate_coupon(coupon_code: str, event: str, user_email: str | None = None) -> dict:
-	event_doc = frappe.get_cached_doc("Buzz Event", event)
-	if frappe.session.user == "Guest" and not event_doc.allow_guest_booking:
-		frappe.throw(_("Please log in to access this feature"), frappe.AuthenticationError)
-
 	if not frappe.db.exists("Buzz Coupon Code", coupon_code):
 		return {"valid": False, "error": _("Invalid coupon code")}
 
