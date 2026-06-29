@@ -62,6 +62,7 @@ def get_form_fields(
 	doctype: str,
 	exclude_fields: set,
 	with_layout_breaks: bool = False,
+	event: str | None = None,
 ) -> list:
 	meta = frappe.get_meta(doctype)
 	fields = []
@@ -99,8 +100,12 @@ def get_form_fields(
 			"description": df.description,
 		}
 		if df.fieldtype == "Link" and df.options:
+			link_filters = {}
+			if event and frappe.get_meta(df.options).has_field("event"):
+				link_filters["event"] = event
 			link_values = frappe.get_all(
 				df.options,
+				filters=link_filters,
 				fields=["name"],
 				limit_page_length=0,
 				order_by="name asc",
@@ -246,7 +251,7 @@ def get_custom_form_data(event_route: str, form_route: str) -> dict:
 	auto_set = get_auto_set_fields(form_doctype)
 	excluded_fields = parse_excluded_fields(form_row.excluded_fields) or set()
 	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys()) | excluded_fields
-	form_fields = get_form_fields(form_doctype, exclude_fields, with_layout_breaks=True)
+	form_fields = get_form_fields(form_doctype, exclude_fields, with_layout_breaks=True, event=event_doc.name)
 
 	form_doctype_meta = frappe.get_meta(form_doctype)
 	custom_fields = []
