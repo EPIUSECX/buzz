@@ -48,14 +48,30 @@ def _get_dial_codes() -> list:
 	return codes
 
 
-def get_form_fields(doctype: str, exclude_fields: set, with_layout_breaks: bool = False) -> list:
+def is_renderable_form_field(df, exclude_fields: set) -> bool:
+	if df.fieldname in exclude_fields:
+		return False
+	if df.fieldtype in LAYOUT_FIELDTYPES:
+		return False
+	if df.hidden or df.read_only:
+		return False
+	return True
+
+
+def get_form_fields(
+	doctype: str,
+	exclude_fields: set,
+	with_layout_breaks: bool = False,
+) -> list:
 	meta = frappe.get_meta(doctype)
 	fields = []
 	for df in meta.fields:
-		if df.fieldname in exclude_fields:
-			continue
-		if df.fieldtype in LAYOUT_FIELDTYPES:
-			if with_layout_breaks and df.fieldtype in LAYOUT_BREAK_FIELDTYPES:
+		if not is_renderable_form_field(df, exclude_fields):
+			if (
+				with_layout_breaks
+				and df.fieldtype in LAYOUT_BREAK_FIELDTYPES
+				and df.fieldname not in exclude_fields
+			):
 				fields.append(
 					{
 						"fieldname": df.fieldname,
@@ -63,10 +79,6 @@ def get_form_fields(doctype: str, exclude_fields: set, with_layout_breaks: bool 
 						"label": df.label or "",
 					}
 				)
-			continue
-		if df.hidden:
-			continue
-		if df.read_only:
 			continue
 		default_value = df.default
 		if default_value:
@@ -148,6 +160,49 @@ def get_auto_set_fields(form_doctype: str):
 	return auto_set
 
 
+def parse_excluded_fields(value: str | None) -> set | None:
+	if not value:
+		return None
+	fieldnames = {fieldname.strip() for fieldname in value.split(",") if fieldname.strip()}
+	return fieldnames or None
+
+
+def get_renderable_fields(form_doctype: str, exclude_fields: set) -> dict:
+	meta = frappe.get_meta(form_doctype)
+	return {df.fieldname: df for df in meta.fields if is_renderable_form_field(df, exclude_fields)}
+
+
+def validate_excluded_fields(form_doctype: str, excluded_fields: str | None) -> None:
+	excluded = parse_excluded_fields(excluded_fields)
+	if not excluded:
+		return
+
+	meta = frappe.get_meta(form_doctype)
+	system_exclude = STANDARD_EXCLUDE_FIELDS | set(get_auto_set_fields(form_doctype).keys())
+	# Blacklisting a system/auto-set field is a harmless no-op (it is never rendered anyway),
+	# so they count as known names; only genuine typos are rejected.
+	known_fieldnames = {df.fieldname for df in meta.fields} | system_exclude
+
+	unknown = excluded - known_fieldnames
+	if unknown:
+		frappe.throw(
+			_("These fields do not exist on the {0} form: {1}").format(
+				form_doctype, ", ".join(sorted(unknown))
+			)
+		)
+
+	renderable = get_renderable_fields(form_doctype, system_exclude)
+	hidden_mandatory = {
+		fieldname for fieldname in excluded if fieldname in renderable and renderable[fieldname].reqd
+	}
+	if hidden_mandatory:
+		frappe.throw(
+			_("These mandatory fields cannot be hidden on the {0} form: {1}").format(
+				form_doctype, ", ".join(sorted(hidden_mandatory))
+			)
+		)
+
+
 @frappe.whitelist(allow_guest=True)  # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 def get_custom_form_data(event_route: str, form_route: str) -> dict:
 	event_doc, form_row = validate_custom_form(event_route, form_route)
@@ -189,7 +244,8 @@ def get_custom_form_data(event_route: str, form_route: str) -> dict:
 		}
 
 	auto_set = get_auto_set_fields(form_doctype)
-	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys())
+	excluded_fields = parse_excluded_fields(form_row.excluded_fields) or set()
+	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys()) | excluded_fields
 	form_fields = get_form_fields(form_doctype, exclude_fields, with_layout_breaks=True)
 
 	form_doctype_meta = frappe.get_meta(form_doctype)
@@ -246,7 +302,8 @@ def submit_custom_form(
 	custom_fields_data = frappe.parse_json(custom_fields_data) or {}
 
 	auto_set = get_auto_set_fields(form_doctype)
-	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys())
+	excluded_fields = parse_excluded_fields(form_row.excluded_fields) or set()
+	exclude_fields = STANDARD_EXCLUDE_FIELDS | set(auto_set.keys()) | excluded_fields
 
 	doc_data = {"doctype": form_doctype}
 
@@ -256,14 +313,14 @@ def submit_custom_form(
 		elif source == "session_user":
 			doc_data[field] = frappe.session.user
 
-	allowed_fieldnames = {f["fieldname"] for f in get_form_fields(form_doctype, exclude_fields)}
+	allowed_fieldnames = set(get_renderable_fields(form_doctype, exclude_fields))
 	for fieldname, value in data.items():
 		if fieldname in allowed_fieldnames:
 			doc_data[fieldname] = value
 
 	meta = frappe.get_meta(form_doctype)
 	for df in meta.fields:
-		if df.fieldtype == "Table" and df.fieldname not in exclude_fields:
+		if df.fieldtype == "Table" and df.fieldname in allowed_fieldnames:
 			if df.fieldname in data and isinstance(data[df.fieldname], list):
 				doc_data[df.fieldname] = data[df.fieldname]
 
