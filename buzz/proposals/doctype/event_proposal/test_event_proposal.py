@@ -65,6 +65,45 @@ class IntegrationTestEventProposal(IntegrationTestCase):
 
 		self.assertEqual(proposal.host, company)
 
+	def test_reuse_fills_only_empty_host_fields(self):
+		# Existing host with empty logo/about -> proposal values fill them in.
+		company = f"Empty {frappe.generate_hash(length=6)}"
+		frappe.get_doc({"doctype": "Event Host", "__newname": company}).insert(ignore_permissions=True)
+
+		proposal = self.make_proposal(
+			host_company=company,
+			host_company_logo="/files/proposal-logo.png",
+			about_the_company="Proposal about.",
+		)
+		proposal.create_host()
+
+		host = frappe.get_doc("Event Host", company)
+		self.assertEqual(host.logo, "/files/proposal-logo.png")
+		self.assertEqual(host.about, "Proposal about.")
+
+	def test_reuse_does_not_overwrite_populated_host_fields(self):
+		# Existing host already has logo/about -> proposal must not clobber them.
+		company = f"Populated {frappe.generate_hash(length=6)}"
+		frappe.get_doc(
+			{
+				"doctype": "Event Host",
+				"__newname": company,
+				"logo": "/files/original-logo.png",
+				"about": "Original about.",
+			}
+		).insert(ignore_permissions=True)
+
+		proposal = self.make_proposal(
+			host_company=company,
+			host_company_logo="/files/proposal-logo.png",
+			about_the_company="Proposal about.",
+		)
+		proposal.create_host()
+
+		host = frappe.get_doc("Event Host", company)
+		self.assertEqual(host.logo, "/files/original-logo.png")
+		self.assertEqual(host.about, "Original about.")
+
 	def test_create_host_requires_company_name(self):
 		proposal = self.make_proposal()
 		with self.assertRaises(frappe.ValidationError):
