@@ -139,6 +139,62 @@ class TestCustomFormExcludedFields(IntegrationTestCase):
 		self.assertEqual(created.speakers[0].email, "jane@example.com")
 
 
+class TestCustomFormLinkEventFilter(IntegrationTestCase):
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		cls.category = ensure_prompt_named_record("Event Category", "Test Forms Category")
+		cls.host = ensure_prompt_named_record("Event Host", "Test Forms Host")
+
+	def make_sponsorship_event(self):
+		form_route = f"sponsor-{frappe.generate_hash(length=6)}"
+		event = frappe.new_doc("Buzz Event")
+		event.update(
+			{
+				"title": f"Test Event {frappe.generate_hash(length=6)}",
+				"start_date": "2030-01-01",
+				"end_date": "2030-01-01",
+				"start_time": "10:00:00",
+				"end_time": "18:00:00",
+				"medium": "Online",
+				"category": self.category,
+				"host": self.host,
+				"is_published": 1,
+			}
+		)
+		event.append(
+			"custom_forms",
+			{"form_doctype": "Sponsorship Enquiry", "route": form_route, "publish": 1},
+		)
+		event.insert(ignore_permissions=True)
+		return event, form_route
+
+	def make_tier(self, event_name, title):
+		tier = frappe.new_doc("Sponsorship Tier")
+		tier.update({"event": event_name, "title": title, "price": 100, "currency": "INR"})
+		tier.insert(ignore_permissions=True)
+		return tier.name
+
+	def test_tier_options_filtered_to_form_event(self):
+		event_a, route_a = self.make_sponsorship_event()
+		event_b, _ = self.make_sponsorship_event()
+		tier_a = self.make_tier(event_a.name, "Gold A")
+		tier_b = self.make_tier(event_b.name, "Gold B")
+
+		data = get_custom_form_data(event_a.route, route_a)
+		tier_field = next(f for f in data["form_fields"] if f["fieldname"] == "tier")
+
+		self.assertIn(tier_a, tier_field["link_options"])
+		self.assertNotIn(tier_b, tier_field["link_options"], "tiers from other events must not leak")
+
+	def test_link_field_without_event_is_not_filtered(self):
+		# Country has no `event` field -> it must keep returning the full list.
+		event_a, route_a = self.make_sponsorship_event()
+		data = get_custom_form_data(event_a.route, route_a)
+		country_field = next(f for f in data["form_fields"] if f["fieldname"] == "country")
+		self.assertTrue(len(country_field["link_options"]) > 1)
+
+
 class TestValidateExcludedFields(IntegrationTestCase):
 	def test_hiding_mandatory_field_throws(self):
 		# speakers is mandatory; it cannot be hidden.
