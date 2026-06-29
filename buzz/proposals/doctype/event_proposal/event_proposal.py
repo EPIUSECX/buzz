@@ -63,6 +63,29 @@ class EventProposal(Document):
 
 		self.create_event()
 
+	@frappe.whitelist()
+	def create_host(self):
+		self.check_permission("write")
+
+		if self.host:
+			frappe.throw(_("A Host is already linked to this proposal."))
+
+		if not self.host_company:
+			frappe.throw(_("Please enter the Company Name before creating a Host."))
+
+		if frappe.db.exists("Event Host", self.host_company):
+			self.host = self.host_company
+		else:
+			host = frappe.new_doc("Event Host")
+			host.name = self.host_company
+			host.logo = self.host_company_logo
+			host.about = self.about_the_company
+			host.insert(ignore_permissions=True)
+			self.host = host.name
+
+		self.save()
+		return self.host
+
 	def create_event(self):
 		if self.status == "Rejected":
 			return
