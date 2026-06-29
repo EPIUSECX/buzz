@@ -34,6 +34,8 @@ class IntegrationTestEventProposal(IntegrationTestCase):
 				"category": self.category,
 				"medium": "Online",
 				"start_date": "2030-01-01",
+				"start_time": "10:00:00",
+				"end_time": "18:00:00",
 				"about": "<p>About the event</p>",
 			}
 		)
@@ -74,3 +76,18 @@ class IntegrationTestEventProposal(IntegrationTestCase):
 		proposal.create_host()
 		with self.assertRaises(frappe.ValidationError):
 			proposal.create_host()
+
+	def test_submit_auto_creates_host_from_company(self):
+		company = f"Auto {frappe.generate_hash(length=6)}"
+		proposal = self.make_proposal(host_company=company, status="Approved")
+
+		proposal.submit()
+
+		self.assertEqual(proposal.host, company)
+		self.assertTrue(frappe.db.exists("Event Host", company))
+		self.assertEqual(proposal.status, "Event Created")
+
+	def test_submit_without_host_or_company_throws(self):
+		proposal = self.make_proposal(status="Approved")
+		with self.assertRaises(frappe.ValidationError):
+			proposal.submit()

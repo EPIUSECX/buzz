@@ -70,6 +70,11 @@ class EventProposal(Document):
 		if self.host:
 			frappe.throw(_("A Host is already linked to this proposal."))
 
+		self._create_host()
+		self.save()
+		return self.host
+
+	def _create_host(self):
 		if not self.host_company:
 			frappe.throw(_("Please enter the Company Name before creating a Host."))
 
@@ -83,20 +88,22 @@ class EventProposal(Document):
 			host.insert(ignore_permissions=True)
 			self.host = host.name
 
-		self.save()
-		return self.host
-
 	def create_event(self):
 		if self.status == "Rejected":
 			return
 
 		if not self.host:
-			frappe.throw(_("Please create or set a Host before submitting the proposal."))
+			if not self.host_company:
+				frappe.throw(_("Please set a Host (or enter a Company Name) before submitting."))
+			self._create_host()
 
 		buzz_event = get_mapped_doc(
 			"Event Proposal", self.name, {"Event Proposal": {"doctype": "Buzz Event"}}
 		)
 		buzz_event.proposal = self.name
+		# host may have just been auto-created in-memory and is not yet persisted,
+		# so the mapped doc (read from DB) would miss it.
+		buzz_event.host = self.host
 		buzz_event.insert()
 
 		self.status = "Event Created"
