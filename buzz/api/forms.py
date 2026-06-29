@@ -99,13 +99,7 @@ def get_form_fields(
 			"description": df.description,
 		}
 		if df.fieldtype == "Link" and df.options:
-			link_values = frappe.get_all(
-				df.options,
-				fields=["name"],
-				limit_page_length=0,
-				order_by="name asc",
-			)
-			field_data["link_options"] = [d.name for d in link_values]
+			field_data["link_options"] = get_link_field_options(df.options)
 		if df.fieldtype == "Table" and df.options:
 			child_meta = frappe.get_meta(df.options)
 			child_fields = []
@@ -126,6 +120,21 @@ def get_form_fields(
 			field_data["child_fields"] = child_fields
 		fields.append(field_data)
 	return fields
+
+
+def get_link_field_options(doctype: str) -> list[dict]:
+	meta = frappe.get_meta(doctype)
+	title_field = meta.title_field if meta.title_field and meta.title_field != "name" else None
+
+	fields = ["name"]
+	if title_field:
+		fields.append(title_field)
+
+	rows = frappe.get_all(doctype, fields=fields, limit_page_length=0, order_by="name asc")
+	return [
+		{"value": row.name, "label": (row.get(title_field) or row.name) if title_field else row.name}
+		for row in rows
+	]
 
 
 def validate_custom_form(event_route: str, form_route: str):
