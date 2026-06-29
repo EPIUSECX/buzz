@@ -5,6 +5,7 @@ from buzz.api.forms import (
 	STANDARD_EXCLUDE_FIELDS,
 	get_custom_form_data,
 	get_form_fields,
+	get_link_field_options,
 	parse_excluded_fields,
 	submit_custom_form,
 	validate_excluded_fields,
@@ -63,6 +64,58 @@ class TestGetFormFields(IntegrationTestCase):
 		self.assertIn("title", real_fields)
 		self.assertFalse({"description", "speakers", "phone"} & real_fields)
 		self.assertTrue(breaks, "expected layout breaks to pass through")
+
+
+class TestGetLinkFieldOptions(IntegrationTestCase):
+	@classmethod
+	def setUpClass(cls):
+		super().setUpClass()
+		cls.category = ensure_prompt_named_record("Event Category", "Test Forms Category")
+		cls.host = ensure_prompt_named_record("Event Host", "Test Forms Host")
+
+	def make_tier(self, title="Gold Tier"):
+		event = frappe.new_doc("Buzz Event")
+		event.update(
+			{
+				"title": f"Test Event {frappe.generate_hash(length=6)}",
+				"start_date": "2030-01-01",
+				"end_date": "2030-01-01",
+				"start_time": "10:00:00",
+				"end_time": "18:00:00",
+				"medium": "Online",
+				"category": self.category,
+				"host": self.host,
+			}
+		)
+		event.insert(ignore_permissions=True)
+		tier = frappe.new_doc("Sponsorship Tier")
+		tier.update({"event": event.name, "title": title, "price": 1000, "currency": "INR"})
+		tier.insert(ignore_permissions=True)
+		return tier
+
+	def test_options_have_value_label_shape(self):
+		options = get_link_field_options("Event Host")
+		self.assertTrue(options)
+		self.assertTrue(all(set(option) == {"value", "label"} for option in options))
+
+	def test_no_title_field_label_falls_back_to_name(self):
+		# Event Host has no title field -> label mirrors the name.
+		match = next(o for o in get_link_field_options("Event Host") if o["value"] == self.host)
+		self.assertEqual(match["label"], self.host)
+
+	def test_title_field_used_as_label(self):
+		# Sponsorship Tier names are hashes; its title field is the readable label.
+		tier = self.make_tier(title="Gold Tier")
+		match = next(o for o in get_link_field_options("Sponsorship Tier") if o["value"] == tier.name)
+		self.assertEqual(match["label"], "Gold Tier")
+		self.assertNotEqual(match["value"], match["label"])
+
+	def test_null_title_falls_back_to_name(self):
+		tier = self.make_tier()
+		# Blank the title directly (bypasses the reqd validation) to exercise the fallback.
+		frappe.db.set_value("Sponsorship Tier", tier.name, "title", "")
+		match = next(o for o in get_link_field_options("Sponsorship Tier") if o["value"] == tier.name)
+		self.assertEqual(match["label"], tier.name)
 
 
 class TestCustomFormExcludedFields(IntegrationTestCase):

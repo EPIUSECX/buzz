@@ -124,17 +124,11 @@ def get_form_fields(
 
 def get_link_field_options(doctype: str) -> list[dict]:
 	meta = frappe.get_meta(doctype)
-	title_field = meta.title_field if meta.title_field and meta.title_field != "name" else None
+	title_field = meta.get_title_field()
 
-	fields = ["name"]
-	if title_field:
-		fields.append(title_field)
-
+	fields = ["name"] if title_field == "name" else ["name", title_field]
 	rows = frappe.get_all(doctype, fields=fields, limit_page_length=0, order_by="name asc")
-	return [
-		{"value": row.name, "label": (row.get(title_field) or row.name) if title_field else row.name}
-		for row in rows
-	]
+	return [{"value": row.name, "label": row.get(title_field) or row.name} for row in rows]
 
 
 def validate_custom_form(event_route: str, form_route: str):
