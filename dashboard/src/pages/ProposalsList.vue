@@ -7,7 +7,7 @@
 			row-key="name"
 			:options="{
 				selectable: false,
-				getRowRoute: (row) => ({
+				getRowRoute: (row: Record<string, any>) => ({
 					name: 'proposal-details',
 					params: { proposalId: row.name },
 				}),
@@ -34,7 +34,10 @@
 			<Spinner />
 		</div>
 
-		<div v-else-if="proposals.data && proposals.data.length === 0" class="text-center py-8">
+		<div
+			v-else-if="proposals.data && (proposals.data as any[]).length === 0"
+			class="text-center py-8"
+		>
 			<div class="text-ink-gray-5 text-lg mb-2">
 				{{ __("No proposals yet") }}
 			</div>
@@ -45,7 +48,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { session } from "@/data/session";
 import { useProposalStatuses } from "@/composables/useProposalStatuses";
 import { Badge, ListRowItem, ListView, Spinner, dayjsLocal, useList } from "frappe-ui";
@@ -66,10 +69,9 @@ const proposals = useList({
 		submitted_by: session.user,
 	},
 	orderBy: "creation desc",
-	auto: true,
 	cacheKey: ["proposals-list", session.user],
-	transform(data) {
-		return data.map((proposal) => ({
+	transform(data: any[]) {
+		return data.map((proposal: Record<string, any>) => ({
 			...proposal,
 			formatted_creation: dayjsLocal(proposal.creation).format("MMM DD, YYYY"),
 		}));

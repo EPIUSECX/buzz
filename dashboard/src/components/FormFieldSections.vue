@@ -17,19 +17,20 @@
 	</div>
 </template>
 
-<script setup>
-import { computed } from "vue";
+<script setup lang="ts">
+import type { FrappeField } from "@/types";
+import { computed, type PropType } from "vue";
 
 const props = defineProps({
 	fields: {
-		type: Array,
+		type: Array as PropType<FrappeField[]>,
 		default: () => [],
 	},
 });
 
 const sections = computed(() => {
-	const sections = [];
-	let current_section = [[]];
+	const sections: FrappeField[][][] = [];
+	let current_section: FrappeField[][] = [[]];
 	for (const field of props.fields) {
 		if (field.fieldtype === "Section Break") {
 			if (current_section.some((column) => column.length)) {

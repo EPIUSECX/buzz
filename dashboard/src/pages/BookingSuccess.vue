@@ -58,7 +58,7 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useBookingFormStorage } from "@/composables/useBookingFormStorage";
 import { useLoginDialog } from "@/composables/useLoginDialog";
 import { usePaymentSuccess } from "@/composables/usePaymentSuccess";
@@ -97,7 +97,7 @@ const confirmation = createResource({
 	url: "buzz.api.get_booking_confirmation",
 	params: { booking_id: props.bookingId, token: route.query.token },
 	auto: true,
-	onSuccess: (data) => {
+	onSuccess: (data: Record<string, any>) => {
 		showSuccess();
 		// Clear any stored booking form data now that the booking is confirmed
 		if (data?.event?.route) {

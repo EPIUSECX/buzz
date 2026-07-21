@@ -91,14 +91,21 @@
 	</li>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import type { TicketAddOn } from "@/types";
 import { Badge, Button, Dropdown } from "frappe-ui";
-import { computed, ref } from "vue";
+import { type Component, computed, ref } from "vue";
 import LucideEdit from "~icons/lucide/edit";
 import LucideUserPen from "~icons/lucide/user-pen";
 import AddOnPreferenceDialog from "./AddOnPreferenceDialog.vue";
 import QRCodeExpandDialog from "./QRCodeExpandDialog.vue";
 import TicketTransferDialog from "./TicketTransferDialog.vue";
+
+interface TicketAction {
+	label: string;
+	icon: Component;
+	onClick: () => void;
+}
 
 const props = defineProps({
 	ticket: {
@@ -132,12 +139,14 @@ const showQRExpanded = ref(false);
 // Check if ticket has customizable add-ons
 const hasCustomizableAddOns = computed(() => {
 	return (
-		props.ticket?.add_ons?.some((addon) => addon.options && addon.options.length > 0) || false
+		props.ticket?.add_ons?.some(
+			(addon: TicketAddOn) => addon.options && addon.options.length > 0
+		) || false
 	);
 });
 
 const ticketActions = computed(() => {
-	const actions = [];
+	const actions: TicketAction[] = [];
 
 	// Don't show any actions if ticket is cancelled or has a pending cancellation request
 	if (props.isCancelled || props.isCancellationRequested) {

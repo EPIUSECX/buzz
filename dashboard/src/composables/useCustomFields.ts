@@ -10,11 +10,15 @@
 export interface FrappeField {
 	fieldname: string
 	fieldtype: string
-	label?: string
+	label: string
 	options?: string | any[]
 	placeholder?: string
 	mandatory?: number | boolean
+	reqd?: number | boolean
+	default?: string | number | boolean
 	default_value?: string | number | boolean
+	link_options?: SelectOption[]
+	applied_to?: string
 }
 
 export interface SelectOption {

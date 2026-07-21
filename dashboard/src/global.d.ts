@@ -9,8 +9,6 @@ declare global {
 		site_name?: string
 	}
 
-	function __(str: string, values?: any[]): string
-
 	declare module "*.wav" {
 		const value: string
 		export default value
@@ -24,5 +22,12 @@ declare global {
 	declare module "*.svg" {
 		const value: string
 		export default value
+	}
+
+	// Virtual icon components from unplugin-icons (e.g. ~icons/lucide/check).
+	declare module "~icons/*" {
+		import type { FunctionalComponent, SVGAttributes } from "vue"
+		const component: FunctionalComponent<SVGAttributes>
+		export default component
 	}
 }

@@ -25,17 +25,14 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import LucideInfo from "~icons/lucide/info";
 
-defineProps({
-	cancellationRequest: {
-		type: Object,
-		default: null,
-	},
-});
+defineProps<{
+	cancellationRequest?: Record<string, any> | null;
+}>();
 
-const formatDate = (dateString) => {
+const formatDate = (dateString: string) => {
 	return new Date(dateString).toLocaleDateString();
 };
 </script>
